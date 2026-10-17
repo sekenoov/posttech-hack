@@ -142,4 +142,4 @@ docs/                    # архитектура, требования, без�
 
 ## Атрибуция
 
-Лицензия — [LICENSE](LICENSE). Логотип Jana Post взят с [janapost.kz](https://www.janapost.kz) без изменений и используется только в рамках хакатона Jana Post; цветовые токены восстановлены по публичному CSS сайта ([docs/JANA_BRAND_RESEARCH.md](docs/JANA_BRAND_RESEARCH.md)).
+Логотип Jana Post взят с [janapost.kz](https://www.janapost.kz) без изменений и используется только в рамках хакатона Jana Post; цветовые токены восстановлены по публичному CSS сайта ([docs/JANA_BRAND_RESEARCH.md](docs/JANA_BRAND_RESEARCH.md)).

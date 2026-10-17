@@ -1,6 +1,6 @@
 # JanaМен — требования (Challenge 02 / DIGITAL HR)
 
-Источник: `Jana_Post_Terricon_Hackathon_2026 1.pdf`, слайды 13–19. Ниже — требования организаторов, разбитые на проверяемые пункты. ID используются в GAP_ANALYSIS, IMPLEMENTATION_PLAN и ACCEPTANCE_TESTS.
+Источник: `Jana_Post_Terricon_Hackathon_2026 1.pdf`, слайды 13–19. Ниже — требования организаторов, разбитые на проверяемые пункты. ID используются в IMPLEMENTATION_PLAN и ACCEPTANCE_TESTS.
 
 ## 1. Функциональные контуры (слайд «Что должна сделать команда»)
 
