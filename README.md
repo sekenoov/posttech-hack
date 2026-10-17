@@ -73,7 +73,7 @@ docker compose exec backend python seed.py --reset   # пересоздать д
 
 | `LLM_PROVIDER` | Ключ | Модель по умолчанию |
 |---|---|---|
-| `openrouter` (основной) | `OPENROUTER_API_KEY` | `anthropic/claude-opus-5.5` |
+| `openrouter` (основной) | `OPENROUTER_API_KEY` | `nvidia/nemotron-3-super-120b-a12b:free` (бесплатный тариф, ответ ~10–15 с) |
 | `anthropic` (дополнительный) | `ANTHROPIC_API_KEY` | `claude-opus-5-5` (effort `low`, server-side fallback при отказе модели) |
 | `none` или ключ не задан | — | режим «только база знаний»: ответ — цитата найденного раздела с источником |
 

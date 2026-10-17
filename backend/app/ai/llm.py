@@ -14,7 +14,7 @@ from app.config import settings
 logger = logging.getLogger("janamen.ai")
 
 DEFAULT_MODELS = {
-    "openrouter": "anthropic/claude-opus-5.5",
+    "openrouter": "nvidia/nemotron-3-super-120b-a12b:free",
     "anthropic": "claude-opus-5-5",
 }
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
