@@ -1,0 +1,7 @@
+node_modules/
+test-results/
+playwright-report/
+screenshots/
+run.log
+run.err
+list.log

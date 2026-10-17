@@ -1,0 +1,63 @@
+{
+  "_comment": "SYNTHETIC demo data. Not the real org structure or staff of Jana Post. Emails use the reserved .example TLD.",
+  "company": "Jana Post",
+  "departments": [
+    {"code": "LOG", "name": "Логистические операции", "name_kk": "Логистикалық операциялар"},
+    {"code": "WH", "name": "Складские операции", "name_kk": "Қойма операциялары"},
+    {"code": "CS", "name": "Служба поддержки клиентов", "name_kk": "Клиенттерді қолдау қызметі"},
+    {"code": "IT", "name": "IT и цифровые продукты", "name_kk": "IT және цифрлық өнімдер"},
+    {"code": "FIN", "name": "Финансы", "name_kk": "Қаржы"},
+    {"code": "HR", "name": "Управление персоналом", "name_kk": "Персоналды басқару"}
+  ],
+  "employees": [
+    {"code": "JP-0001", "email": "director@janamen.example", "role": "manager",
+     "last_name": "Искаков", "first_name": "Бахыт", "middle_name": "Серикович",
+     "position": "Операционный директор", "department": "LOG", "manager": null,
+     "hire_date": "2019-03-11", "location": "Алматы", "leave_days": 30},
+
+    {"code": "JP-0002", "email": "hr@janamen.example", "role": "hr",
+     "last_name": "Ермекова", "first_name": "Сауле", "middle_name": "Маратовна",
+     "position": "HR бизнес-партнёр", "department": "HR", "manager": "JP-0001",
+     "hire_date": "2020-08-03", "location": "Алматы", "leave_days": 26},
+
+    {"code": "JP-0010", "email": "manager@janamen.example", "role": "manager",
+     "last_name": "Абдрахманов", "first_name": "Нурлан", "middle_name": "Ерикович",
+     "position": "Руководитель отдела логистических операций", "department": "LOG", "manager": "JP-0001",
+     "hire_date": "2020-02-17", "location": "Алматы", "leave_days": 26},
+
+    {"code": "JP-0011", "email": "employee@janamen.example", "role": "employee",
+     "last_name": "Касымова", "first_name": "Айдана", "middle_name": "Бауыржановна",
+     "position": "Специалист по логистике", "department": "LOG", "manager": "JP-0010",
+     "hire_date": "2023-04-10", "location": "Алматы", "leave_days": 24},
+
+    {"code": "JP-0012", "email": "erlan@janamen.example", "role": "employee",
+     "last_name": "Жумабаев", "first_name": "Ерлан", "middle_name": "Кайратович",
+     "position": "Координатор маршрутов доставки", "department": "LOG", "manager": "JP-0010",
+     "hire_date": "2022-09-05", "location": "Алматы", "leave_days": 24},
+
+    {"code": "JP-0013", "email": "maria@janamen.example", "role": "employee",
+     "last_name": "Ким", "first_name": "Мария", "middle_name": "Викторовна",
+     "position": "Диспетчер", "department": "LOG", "manager": "JP-0010",
+     "hire_date": "2024-01-15", "location": "Алматы", "leave_days": 24},
+
+    {"code": "JP-0014", "email": "kairat@janamen.example", "role": "employee",
+     "last_name": "Мусин", "first_name": "Кайрат", "middle_name": "Асканович",
+     "position": "Старший кладовщик", "department": "WH", "manager": "JP-0010",
+     "hire_date": "2021-06-21", "location": "Алматы", "leave_days": 24},
+
+    {"code": "JP-0020", "email": "manager2@janamen.example", "role": "manager",
+     "last_name": "Сулейменова", "first_name": "Динара", "middle_name": "Ахметовна",
+     "position": "Руководитель службы поддержки клиентов", "department": "CS", "manager": "JP-0001",
+     "hire_date": "2021-01-25", "location": "Астана", "leave_days": 26},
+
+    {"code": "JP-0021", "email": "timur@janamen.example", "role": "employee",
+     "last_name": "Оспанов", "first_name": "Тимур", "middle_name": "Даулетович",
+     "position": "Специалист поддержки клиентов", "department": "CS", "manager": "JP-0020",
+     "hire_date": "2024-05-13", "location": "Астана", "leave_days": 24},
+
+    {"code": "JP-0022", "email": "aliya@janamen.example", "role": "employee",
+     "last_name": "Нургалиева", "first_name": "Алия", "middle_name": "Санжаровна",
+     "position": "Старший специалист поддержки клиентов", "department": "CS", "manager": "JP-0020",
+     "hire_date": "2022-11-01", "location": "Астана", "leave_days": 24}
+  ]
+}

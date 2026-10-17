@@ -1,0 +1,4 @@
+/* Base resets only. Colors and typography come from src/theme (design tokens). */
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#root { min-height: 100vh; }
