@@ -31,7 +31,7 @@ function SourceCard({ source }) {
       <Stack direction="row" spacing={1} alignItems="center">
         <DescriptionIcon fontSize="small" sx={{ color: tokens.primary }} />
         <Typography variant="body2" fontWeight={600} sx={{ flex: 1, minWidth: 0 }} noWrap>{source.title}</Typography>
-        <Chip size="small" label={`${source.id} · v${source.version}`} sx={{ bgcolor: tokens.bg, fontWeight: 500 }} />
+        <Chip size="small" label={`${source.id} v${source.version}`} sx={{ bgcolor: tokens.bg, fontWeight: 500 }} />
       </Stack>
       <Typography variant="caption" component="div" sx={{ mt: 0.5 }}>{t('ai.source')}: {source.section}</Typography>
       {source.snippet && <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>«{source.snippet}»</Typography>}

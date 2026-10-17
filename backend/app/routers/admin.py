@@ -86,14 +86,14 @@ def integrations(_: User = Depends(_hr), db: Session = Depends(get_db)):
     return [
         {
             "system": "1c_zup", "name": "1С:ЗУП", "port": "HRMasterDataProvider", "adapter": "Mock1CZup",
-            "mode": "mock", "direction": "1С:ЗУП → JanaМен (read-only)",
+            "mode": "mock", "direction": "Из 1С:ЗУП в JanaМен (только чтение)",
             "data": ["сотрудники и табельные номера", "должности и подразделения", "руководители",
                      "даты приёма", "остатки отпусков"],
             "last_event_at": last("1c_zup"),
         },
         {
             "system": "documentolog", "name": "Documentolog", "port": "DocumentFlowProvider",
-            "adapter": "MockDocumentolog", "mode": "mock", "direction": "JanaМен → Documentolog",
+            "adapter": "MockDocumentolog", "mode": "mock", "direction": "Из JanaМен в Documentolog",
             "data": ["приказ на отпуск после согласования", "статус подписания (webhook, план)"],
             "last_event_at": last("documentolog"),
         },

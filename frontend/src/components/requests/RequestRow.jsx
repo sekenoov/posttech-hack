@@ -20,8 +20,8 @@ export default function RequestRow({ request, showEmployee = false, actions }) {
               {showEmployee ? request.employee.full_name : t(`requestType.${request.type}`)}
             </Typography>
             <Typography variant="body2" color="text.secondary" noWrap>
-              {showEmployee ? `${t(`requestType.${request.type}`)} · ` : ''}
-              {fmtPeriod(request.start_date, request.end_date)} · {t('common.days', { n: request.days })}
+              {showEmployee ? `${t(`requestType.${request.type}`)}, ` : ''}
+              {fmtPeriod(request.start_date, request.end_date)}, {t('common.days', { n: request.days })}
             </Typography>
           </Box>
           <Stack direction="row" spacing={1.5} alignItems="center">

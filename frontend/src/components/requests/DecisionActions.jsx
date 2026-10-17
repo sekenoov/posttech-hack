@@ -48,7 +48,7 @@ export default function DecisionActions({ request, onDone, size = 'medium' }) {
         <DialogTitle>{t('requests.rejectTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
-            {request.employee.full_name} · {t('requests.rejectHint')}
+            {request.employee.full_name}. {t('requests.rejectHint')}
           </DialogContentText>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           <TextField autoFocus fullWidth multiline minRows={3} label={t('requests.rejectComment')}

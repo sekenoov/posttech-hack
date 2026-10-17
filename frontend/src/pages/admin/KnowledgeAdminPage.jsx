@@ -40,7 +40,7 @@ function Editor({ id, onSaved }) {
         <Card>
           <CardContent sx={{ p: 3 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-              <Typography variant="caption">{d.id} · v{d.version} · {fmtDateTime(d.updated_at)}</Typography>
+              <Typography variant="caption">{d.id} v{d.version}, {fmtDateTime(d.updated_at)}</Typography>
             </Stack>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <TextField fullWidth label={t('kb.docTitle')} value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} sx={{ mb: 2 }} />
@@ -81,7 +81,7 @@ export default function KnowledgeAdminPage() {
                 <List>
                   {rows.map((d) => (
                     <ListItemButton key={d.id} selected={d.id === current} onClick={() => setSelected(d.id)}>
-                      <ListItemText primary={d.title} secondary={`${d.id} · v${d.version}`} />
+                      <ListItemText primary={d.title} secondary={`${d.id} v${d.version}`} />
                     </ListItemButton>
                   ))}
                 </List>

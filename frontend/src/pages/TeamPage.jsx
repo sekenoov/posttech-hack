@@ -73,7 +73,7 @@ function MembersTab() {
                     {m.pending_requests > 0 && <Chip size="small" variant="outlined" color="warning" label={t('team.pendingCount', { n: m.pending_requests })} />}
                   </Stack>
                   <Typography variant="caption" component="p" sx={{ mt: 1.5 }}>
-                    {m.department} · {t('team.hiredAt', { date: fmtDate(m.hire_date) })}
+                    {m.department}. {t('team.hiredAt', { date: fmtDate(m.hire_date) })}
                   </Typography>
                 </CardContent>
               </Card>

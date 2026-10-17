@@ -87,10 +87,10 @@ function DocumentList() {
                   <CardActionArea component={RouterLink} to={`/knowledge/${d.id}`} sx={{ height: '100%' }}>
                     <CardContent>
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                        <DescriptionIcon sx={{ color: tokens.primary }} /><Typography variant="caption">{d.id} · v{d.version}</Typography>
+                        <DescriptionIcon sx={{ color: tokens.primary }} /><Typography variant="caption">{d.id} v{d.version}</Typography>
                       </Stack>
                       <Typography variant="h3" component="h2">{d.title}</Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{d.sections.slice(0, 4).join(' · ')}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{d.sections.slice(0, 4).join('. ')}</Typography>
                     </CardContent>
                   </CardActionArea>
                 </Card>

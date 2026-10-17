@@ -50,7 +50,7 @@ function DocumentTitle() {
   const { pathname } = useLocation();
   useEffect(() => {
     const match = TITLES.find(([prefix]) => pathname.startsWith(prefix));
-    document.title = match ? `${t(match[1])} · JanaМен` : 'JanaМен · Jana Post';
+    document.title = match ? `${t(match[1])} | JanaМен` : 'JanaМен | Jana Post';
   }, [pathname, t]);
   return null;
 }

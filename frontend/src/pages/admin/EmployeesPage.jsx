@@ -57,7 +57,7 @@ function AddEmployeeDialog({ open, onClose, onCreated, employees }) {
           <Grid item xs={12} sm={4}><TextField fullWidth required label={t('admin.firstName')} value={form.first_name} onChange={set('first_name')} /></Grid>
           <Grid item xs={12} sm={4}><TextField fullWidth label={t('admin.middleName')} value={form.middle_name} onChange={set('middle_name')} /></Grid>
           <Grid item xs={12} sm={6}><TextField fullWidth required type="email" label={t('admin.email')} value={form.email} onChange={set('email')} /></Grid>
-          <Grid item xs={12} sm={6}><TextField fullWidth required type="password" label={t('admin.password')} value={form.password} onChange={set('password')} inputProps={{ minLength: 8 }} helperText="≥ 8" /></Grid>
+          <Grid item xs={12} sm={6}><TextField fullWidth required type="password" label={t('admin.password')} value={form.password} onChange={set('password')} inputProps={{ minLength: 8 }} helperText={t('admin.passwordHint')} /></Grid>
           <Grid item xs={12} sm={6}><TextField fullWidth required label={t('admin.position')} value={form.position} onChange={set('position')} /></Grid>
           <Grid item xs={12} sm={6}>
             <TextField select fullWidth required label={t('admin.role')} value={form.role} onChange={set('role')}>

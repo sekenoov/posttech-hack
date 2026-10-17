@@ -24,7 +24,7 @@ function CourseCard({ course }) {
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>{course.description}</Typography>
         <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 1.5, color: tokens.textMuted }}>
           <ScheduleIcon fontSize="inherit" />
-          <Typography variant="caption">{t('academy.minutes', { n: course.duration_min })} · {t('academy.lessons', { n: course.lessons_total })}</Typography>
+          <Typography variant="caption">{t('academy.minutes', { n: course.duration_min })}, {t('academy.lessons', { n: course.lessons_total })}</Typography>
         </Stack>
         {a && (
           <Box sx={{ mt: 2 }}>

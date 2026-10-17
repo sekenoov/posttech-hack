@@ -89,7 +89,7 @@ export default function AcademyAdminPage() {
                       <TableCell><Typography fontSize={14} fontWeight={600}>{a.employee.full_name}</Typography><Typography variant="caption">{a.department}</Typography></TableCell>
                       <TableCell>{a.course_title}</TableCell>
                       <TableCell><StatusChip status={a.status} /></TableCell>
-                      <TableCell>{a.progress_pct}% · {a.lessons_done}/{a.lessons_total}</TableCell>
+                      <TableCell>{a.progress_pct}% ({a.lessons_done}/{a.lessons_total})</TableCell>
                       <TableCell>{a.score != null ? `${a.score}%` : '-'}</TableCell>
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>{a.due_date ? fmtDate(a.due_date) : '-'}</TableCell>
                     </TableRow>

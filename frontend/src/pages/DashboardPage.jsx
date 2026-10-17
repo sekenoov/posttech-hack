@@ -32,7 +32,7 @@ function ProfileSummary({ profile }) {
     <SectionCard title={t('profile.official')}
       action={<Button size="small" component={RouterLink} to="/profile">{t('common.details')}</Button>}>
       <Typography fontWeight={600}>{profile.full_name}</Typography>
-      <Typography variant="caption">{t(`roles.${profile.role}`)} · {profile.employee_code}</Typography>
+      <Typography variant="caption">{t(`roles.${profile.role}`)}, {profile.employee_code}</Typography>
       <Box component="dl" sx={{ m: 0, mt: 1.5, display: 'grid', gridTemplateColumns: 'auto 1fr', columnGap: 2, rowGap: 0.75 }}>
         {rows.map(([k, v]) => (
           <Box key={k} sx={{ display: 'contents' }}>
@@ -108,7 +108,7 @@ export default function DashboardPage() {
           <>
             <PageHeader
               title={t('dashboard.greeting', { name: profile.first_name })}
-              subtitle={`${profile.position} · ${deptName(profile.department)}`}
+              subtitle={`${profile.position}, ${deptName(profile.department)}`}
               actions={<>
                 <Button variant="outlined" startIcon={<AutoAwesomeIcon />} component={RouterLink} to="/assistant">{t('dashboard.askAi')}</Button>
                 <Button variant="contained" startIcon={<AddIcon />} component={RouterLink} to="/requests/new">{t('dashboard.newVacation')}</Button>

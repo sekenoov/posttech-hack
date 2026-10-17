@@ -57,7 +57,7 @@ function SidebarContent({ onNavigate }) {
       </Box>
       <Divider />
       <Box sx={{ px: 2.5, py: 1.5 }}>
-        <Typography variant="caption">© Jana Post · {t('common.demo')}</Typography>
+        <Typography variant="caption">Jana Post, {t('common.demo')}</Typography>
       </Box>
     </Box>
   );

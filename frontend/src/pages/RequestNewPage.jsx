@@ -70,7 +70,7 @@ export default function RequestNewPage() {
                           InputLabelProps={{ shrink: true }} inputProps={{ min: form.start_date || today }} required fullWidth size="medium" />
                       </Stack>
                       {dateError && <Alert severity="warning">{dateError}</Alert>}
-                      <TextField label={t('requests.comment')} helperText={`${t('requests.commentHint')} · ${form.comment.length}/500`}
+                      <TextField label={t('requests.comment')} helperText={`${t('requests.commentHint')} (${form.comment.length}/500)`}
                         value={form.comment} onChange={set('comment')} multiline minRows={3} inputProps={{ maxLength: 500 }} />
                       <Box>
                         <Button type="submit" variant="contained" size="large" disabled={!canSubmit}>

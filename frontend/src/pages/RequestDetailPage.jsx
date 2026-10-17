@@ -31,7 +31,7 @@ function History({ items }) {
           <Box sx={{ minWidth: 0 }}>
             <Typography fontWeight={600}>{t(`requests.${HISTORY_LABEL[h.to_status]}`)}</Typography>
             <Typography variant="body2" color="text.secondary">
-              {h.actor.full_name}{h.actor.position ? ` · ${h.actor.position}` : ''}
+              {h.actor.full_name}{h.actor.position ? `, ${h.actor.position}` : ''}
             </Typography>
             <Typography variant="caption">{fmtDateTime(h.created_at)}</Typography>
             {h.comment && (
@@ -79,7 +79,7 @@ export default function RequestDetailPage() {
               title={<Stack direction="row" spacing={1.5} alignItems="center" component="span">
                 <span>{t('requests.detailTitle', { id: r.id })}</span><StatusChip status={r.status} size="medium" />
               </Stack>}
-              subtitle={`${t(`requestType.${r.type}`)} · ${r.employee.full_name}`}
+              subtitle={`${t(`requestType.${r.type}`)}, ${r.employee.full_name}`}
             />
             {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
             <Grid container spacing={2}>
@@ -88,7 +88,7 @@ export default function RequestDetailPage() {
                   <CardContent sx={{ p: 3 }}>
                     <Typography variant="body2" color="text.secondary">{t('requests.period')}</Typography>
                     <Typography variant="h2" component="p" sx={{ mt: 0.5 }}>{fmtPeriod(r.start_date, r.end_date)}</Typography>
-                    <Typography color="text.secondary">{t('common.days', { n: r.days })} · {t('requests.created')} {fmtDateTime(r.created_at)}</Typography>
+                    <Typography color="text.secondary">{t('common.days', { n: r.days })}. {t('requests.created')} {fmtDateTime(r.created_at)}</Typography>
 
                     {r.comment && (
                       <Box sx={{ mt: 2.5 }}>
@@ -99,7 +99,7 @@ export default function RequestDetailPage() {
                     {r.decided_by && (
                       <Box sx={{ mt: 2.5, p: 2, borderRadius: 2, bgcolor: r.status === 'approved' ? tokens.primarySoft : tokens.dangerSoft }}>
                         <Typography variant="body2" color="text.secondary">{t('requests.decidedBy')}</Typography>
-                        <Typography fontWeight={600}>{r.decided_by.full_name} · {fmtDateTime(r.decided_at)}</Typography>
+                        <Typography fontWeight={600}>{r.decided_by.full_name}, {fmtDateTime(r.decided_at)}</Typography>
                         {r.decision_comment && <Typography sx={{ mt: 1 }}>«{r.decision_comment}»</Typography>}
                       </Box>
                     )}
