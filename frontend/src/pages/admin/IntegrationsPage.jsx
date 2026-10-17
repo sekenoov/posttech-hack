@@ -74,7 +74,7 @@ export default function IntegrationsPage() {
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>{fmtDateTime(e.created_at)}</TableCell>
                       <TableCell>{e.system === '1c_zup' ? '1С:ЗУП' : 'Documentolog'}</TableCell>
                       <TableCell sx={{ fontFamily: 'ui-monospace, monospace', fontSize: 13 }}>{e.operation}</TableCell>
-                      <TableCell>{e.reference || '—'}</TableCell>
+                      <TableCell>{e.reference || '-'}</TableCell>
                       <TableCell><Chip size="small" label={e.status}
                         sx={e.status === 'ok' ? { bgcolor: tokens.primarySoft, color: tokens.primaryStrong } : { bgcolor: tokens.dangerSoft, color: tokens.danger }} /></TableCell>
                     </TableRow>

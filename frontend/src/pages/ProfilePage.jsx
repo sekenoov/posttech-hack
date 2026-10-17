@@ -17,7 +17,7 @@ function Field({ label, value }) {
   return (
     <Box>
       <Typography variant="body2" color="text.secondary">{label}</Typography>
-      <Typography fontWeight={500} sx={{ mt: 0.25, wordBreak: 'break-word' }}>{value || '—'}</Typography>
+      <Typography fontWeight={500} sx={{ mt: 0.25, wordBreak: 'break-word' }}>{value || '-'}</Typography>
     </Box>
   );
 }
@@ -131,7 +131,7 @@ export default function ProfilePage() {
                   <Grid item xs={12} sm={6}><Field label={t('profile.company')} value={p.company} /></Grid>
                   <Grid item xs={12} sm={6}><Field label={t('profile.position')} value={p.position} /></Grid>
                   <Grid item xs={12} sm={6}><Field label={t('profile.department')} value={deptName(p.department)} /></Grid>
-                  <Grid item xs={12} sm={6}><Field label={t('profile.manager')} value={p.manager ? `${p.manager.full_name}${p.manager.position ? ` — ${p.manager.position}` : ''}` : t('profile.noManager')} /></Grid>
+                  <Grid item xs={12} sm={6}><Field label={t('profile.manager')} value={p.manager ? `${p.manager.full_name}${p.manager.position ? `, ${p.manager.position}` : ''}` : t('profile.noManager')} /></Grid>
                   <Grid item xs={12} sm={6}><Field label={t('profile.hireDate')} value={fmtDate(p.hire_date)} /></Grid>
                   <Grid item xs={12} sm={6}><Field label={t('profile.location')} value={p.work_location} /></Grid>
                   <Grid item xs={12} sm={6}><Field label={t('profile.email')} value={p.email} /></Grid>

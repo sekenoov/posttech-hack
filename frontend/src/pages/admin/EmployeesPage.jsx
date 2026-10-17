@@ -115,7 +115,7 @@ export default function EmployeesPage() {
                       <TableCell><Typography fontWeight={600} fontSize={14}>{e.full_name}</Typography><Typography variant="caption">{e.email}</Typography></TableCell>
                       <TableCell>{e.position}</TableCell>
                       <TableCell>{e.department}</TableCell>
-                      <TableCell>{e.manager?.full_name || '—'}</TableCell>
+                      <TableCell>{e.manager?.full_name || '-'}</TableCell>
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>{fmtDate(e.hire_date)}</TableCell>
                       <TableCell><Chip size="small" label={t(`roles.${e.role}`)} sx={{ bgcolor: tokens.primarySoft, color: tokens.primaryStrong }} /></TableCell>
                     </TableRow>

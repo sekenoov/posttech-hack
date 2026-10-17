@@ -62,7 +62,7 @@ def create_request(db: Session, employee: User, start_date: date, end_date: date
         LeaveRequest.end_date >= start_date,
     ).first()
     if overlap:
-        raise _error(409, f"Даты пересекаются с заявкой №{overlap.id} ({_fmt(overlap.start_date)}–{_fmt(overlap.end_date)})")
+        raise _error(409, f"Даты пересекаются с заявкой №{overlap.id} ({_fmt(overlap.start_date)}-{_fmt(overlap.end_date)})")
 
     balance = get_or_create_balance(db, employee.id)
     available = balance.remaining_days - pending_days(db, employee.id)
@@ -82,7 +82,7 @@ def create_request(db: Session, employee: User, start_date: date, end_date: date
         notify(
             db, approver_id, NotificationType.REQUEST_SUBMITTED,
             title="Новая заявка на отпуск",
-            body=f"{employee.full_name}: {_fmt(start_date)}–{_fmt(end_date)}, {days} дн.",
+            body=f"{employee.full_name}: {_fmt(start_date)}-{_fmt(end_date)}, {days} дн.",
             link=f"/requests/{request.id}",
         )
     db.commit()
@@ -96,7 +96,7 @@ def decide(db: Session, actor: User, request: LeaveRequest, decision: str, comme
             raise _error(403, "Нельзя согласовать собственную заявку")
         raise _error(403, "Согласовать заявку может только непосредственный руководитель сотрудника")
     if request.status != RequestStatus.PENDING:
-        raise _error(409, "Заявка уже рассмотрена — повторное решение невозможно")
+        raise _error(409, "Заявка уже рассмотрена, повторное решение невозможно")
 
     comment = (comment or "").strip() or None
     new_status = RequestStatus.APPROVED if decision == "approve" else RequestStatus.REJECTED
@@ -107,7 +107,7 @@ def decide(db: Session, actor: User, request: LeaveRequest, decision: str, comme
     request.decision_comment = comment
     _log(db, request, previous, new_status, actor, comment)
 
-    period = f"{_fmt(request.start_date)}–{_fmt(request.end_date)}"
+    period = f"{_fmt(request.start_date)}-{_fmt(request.end_date)}"
     if new_status == RequestStatus.APPROVED:
         balance = get_or_create_balance(db, request.employee_id)
         balance.used_days += request.days
@@ -137,7 +137,7 @@ def cancel(db: Session, actor: User, request: LeaveRequest) -> LeaveRequest:
     if approver_id:
         notify(db, approver_id, NotificationType.REQUEST_CANCELLED,
                title="Заявка на отпуск отозвана",
-               body=f"{actor.full_name}: {_fmt(request.start_date)}–{_fmt(request.end_date)}",
+               body=f"{actor.full_name}: {_fmt(request.start_date)}-{_fmt(request.end_date)}",
                link=f"/requests/{request.id}")
     db.commit()
     db.refresh(request)

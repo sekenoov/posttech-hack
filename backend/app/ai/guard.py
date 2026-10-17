@@ -62,7 +62,7 @@ def check(db: Session, user: User, question: str) -> GuardResult | None:
         return GuardResult(
             "hr_decision",
             "AI Jana не принимает кадровых решений и не может согласовать, отклонить или изменить заявку. "
-            "Решение по заявке принимает ваш руководитель — статус виден в разделе «Мои заявки».",
+            "Решение по заявке принимает ваш руководитель. Статус виден в разделе «Мои заявки».",
             "/requests",
         )
     if _mentions_name(words(question), _other_people_names(db, user)):

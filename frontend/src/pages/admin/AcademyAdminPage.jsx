@@ -47,7 +47,7 @@ function AssignDialog({ open, onClose, onDone }) {
             {(courses.data || []).map((c) => <MenuItem key={c.id} value={c.id}>{c.title}</MenuItem>)}
           </TextField>
           <Autocomplete multiple options={(employees.data || []).filter((e) => e.is_active)} value={people}
-            onChange={(_, v) => setPeople(v)} getOptionLabel={(o) => `${o.full_name} — ${o.position}`}
+            onChange={(_, v) => setPeople(v)} getOptionLabel={(o) => `${o.full_name}, ${o.position}`}
             isOptionEqualToValue={(a, b) => a.id === b.id} filterSelectedOptions
             renderInput={(params) => <TextField {...params} label={t('academy.employees')} />} />
           <TextField type="date" label={t('academy.dueDate')} value={due} onChange={(e) => setDue(e.target.value)} InputLabelProps={{ shrink: true }} />
@@ -90,8 +90,8 @@ export default function AcademyAdminPage() {
                       <TableCell>{a.course_title}</TableCell>
                       <TableCell><StatusChip status={a.status} /></TableCell>
                       <TableCell>{a.progress_pct}% · {a.lessons_done}/{a.lessons_total}</TableCell>
-                      <TableCell>{a.score != null ? `${a.score}%` : '—'}</TableCell>
-                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{a.due_date ? fmtDate(a.due_date) : '—'}</TableCell>
+                      <TableCell>{a.score != null ? `${a.score}%` : '-'}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{a.due_date ? fmtDate(a.due_date) : '-'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

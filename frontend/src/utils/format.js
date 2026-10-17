@@ -2,17 +2,17 @@ import { format, formatDistanceToNowStrict, parseISO } from './date';
 
 const toDate = (value) => (value instanceof Date ? value : parseISO(value));
 
-export const fmtDate = (value) => (value ? format(toDate(value), 'd MMMM yyyy') : '—');
-export const fmtDateShort = (value) => (value ? format(toDate(value), 'd MMM') : '—');
-export const fmtDateTime = (value) => (value ? format(toDate(value), 'd MMM yyyy, HH:mm') : '—');
+export const fmtDate = (value) => (value ? format(toDate(value), 'd MMMM yyyy') : '-');
+export const fmtDateShort = (value) => (value ? format(toDate(value), 'd MMM') : '-');
+export const fmtDateTime = (value) => (value ? format(toDate(value), 'd MMM yyyy, HH:mm') : '-');
 
 export const fmtPeriod = (start, end) => {
   const s = toDate(start);
   const e = toDate(end);
   if (s.getFullYear() === e.getFullYear()) {
-    return `${format(s, s.getMonth() === e.getMonth() ? 'd' : 'd MMM')} – ${format(e, 'd MMM yyyy')}`;
+    return `${format(s, s.getMonth() === e.getMonth() ? 'd' : 'd MMM')} - ${format(e, 'd MMM yyyy')}`;
   }
-  return `${format(s, 'd MMM yyyy')} – ${format(e, 'd MMM yyyy')}`;
+  return `${format(s, 'd MMM yyyy')} - ${format(e, 'd MMM yyyy')}`;
 };
 
 export const fmtRelative = (value) =>

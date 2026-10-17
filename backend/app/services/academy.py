@@ -121,7 +121,7 @@ def submit_quiz(db: Session, user: User, course: Course, answers: list[int]):
             if a.assigned_by_id and a.assigned_by_id != user.id:
                 notify(db, a.assigned_by_id, NotificationType.COURSE_COMPLETED,
                        title="Сотрудник завершил курс",
-                       body=f"{user.full_name} — «{course.title}», результат {score}%",
+                       body=f"{user.full_name}: «{course.title}», результат {score}%",
                        link="/admin/academy")
     db.commit()
     db.refresh(a)

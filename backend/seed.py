@@ -106,7 +106,7 @@ def seed_requests(db: Session, u: dict[str, User], today: date) -> None:
                     RequestStatus.APPROVED, nurlan, T - timedelta(days=99))
     rejected = _request(db, aidana, T + timedelta(days=20), 3, "Личные дела", T - timedelta(days=6),
                         RequestStatus.REJECTED, nurlan, T - timedelta(days=5),
-                        "Пиковая неделя отгрузок — давай перенесём на декабрь")
+                        "Пиковая неделя отгрузок, давай перенесём на декабрь")
     _request(db, aidana, T + timedelta(days=40), 7, "Ежегодный отпуск", T - timedelta(days=1))
     # Rest of Нурлан's team
     _request(db, erlan, T + timedelta(days=14), 5, None, T - timedelta(days=2))
@@ -129,7 +129,7 @@ def seed_requests(db: Session, u: dict[str, User], today: date) -> None:
                      created_at=_at(T - timedelta(days=99), 15)),
         Notification(user_id=aidana.id, type=NotificationType.REQUEST_REJECTED, is_read=False,
                      title="Заявка на отпуск отклонена",
-                     body="Комментарий: Пиковая неделя отгрузок — давай перенесём на декабрь",
+                     body="Комментарий: Пиковая неделя отгрузок, давай перенесём на декабрь",
                      link=f"/requests/{rejected.id}", created_at=_at(T - timedelta(days=5), 15)),
     ])
     for approver, emp, req_days in ((nurlan, aidana, 7), (nurlan, erlan, 5), (director, nurlan, 10), (dinara, timur, 5)):
