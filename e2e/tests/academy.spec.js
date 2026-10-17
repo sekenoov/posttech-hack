@@ -34,7 +34,7 @@ test('S4 — HR assigns a course, employee completes lessons and quiz, result is
   await expect(page.getByText('53%')).toBeVisible(); // 2 of 3 lessons = 80% * 2/3
   await expect(page.getByRole('heading', { level: 2 })).toHaveText(infosec.lessons[2].title);
   await shot(page, 's4-lesson');
-  await page.getByRole('button', { name: 'Урок пройден — к тесту' }).click();
+  await page.getByRole('button', { name: 'Урок пройден, к тесту' }).click();
 
   await expect(page.getByRole('heading', { level: 2 })).toHaveText('Итоговый тест');
   for (const [i, q] of infosec.questions.entries()) {

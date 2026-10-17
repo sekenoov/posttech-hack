@@ -16,13 +16,16 @@ from sqlalchemy.orm import Session
 from app.ai import guard
 from app.ai.knowledge import Chunk, chunk_document
 from app.ai.llm import LLMError, LLMProvider, get_provider
-from app.ai.retriever import Hit, Retriever, best_sentences
+from app.ai.retriever import Hit, Retriever, best_sentences, content_stems, normalize
 from app.models import KnowledgeDocument, User
 
 logger = logging.getLogger("janamen.ai")
 
 NO_ANSWER = "NO_ANSWER"
 _CITATION = re.compile(r"KB-[A-Z]+-\d{3}")
+# Models sometimes copy the whole context header: [KB-LEAVE-001, v1.0, Title, раздел: Section]
+_CITATION_TAG = re.compile(r"\[(KB-[A-Z]+-\d{3})([^\]]*)\]")
+_SECTION_HINT = re.compile(r"раздел:\s*([^\]]+)", re.I)
 
 SYSTEM_PROMPT = f"""Ты AI Jana, HR-ассистент внутренней платформы JanaМен компании Jana Post.
 
@@ -103,6 +106,22 @@ def _context(hits: list[Hit]) -> str:
     return "<context>\n" + "\n\n".join(parts) + "\n</context>"
 
 
+def _cited_chunk(doc_hits: list[Hit], section_hint: str | None, answer_stems: set[str]) -> Chunk:
+    """The section of a cited document the answer is based on.
+
+    Several sections of one document can be in the context, so the document id
+    alone is not enough: take the section the model named, otherwise the one
+    sharing most words with the answer (ties keep retrieval order).
+    """
+    if section_hint:
+        hint = normalize(section_hint).strip(" .,;")
+        for h in doc_hits:
+            section = normalize(h.chunk.section)
+            if hint.startswith(section) or section.startswith(hint):
+                return h.chunk
+    return max(doc_hits, key=lambda h: len(answer_stems & content_stems(h.chunk.text))).chunk
+
+
 def ask(db: Session, user: User, question: str) -> Answer:
     question = question.strip()
 
@@ -128,14 +147,24 @@ def ask(db: Session, user: User, question: str) -> Answer:
     if text.strip().strip(".").upper() == NO_ANSWER:
         return _refusal()
 
-    by_id = {h.chunk.doc_id: h for h in hits}
-    cited = [doc_id for doc_id in dict.fromkeys(_CITATION.findall(text)) if doc_id in by_id]
+    by_doc: dict[str, list[Hit]] = {}
+    for h in hits:
+        by_doc.setdefault(h.chunk.doc_id, []).append(h)
+    cited = [doc_id for doc_id in dict.fromkeys(_CITATION.findall(text)) if doc_id in by_doc]
     if not cited:
         # Ungrounded output (no citation of the provided context): never shown.
         logger.warning("LLM answer without valid citation discarded")
         return _extractive(question, hits[0], provider=provider.name)
 
+    hints: dict[str, str] = {}
+    for m in _CITATION_TAG.finditer(text):
+        section = _SECTION_HINT.search(m.group(2))
+        if section:
+            hints.setdefault(m.group(1), section.group(1))
+    text = _CITATION_TAG.sub(lambda m: f"[{m.group(1)}]", text)
+    answer_stems = content_stems(_CITATION.sub(" ", text))
     return Answer(
         answer=text, mode="llm", grounded=True, provider=provider.name,
-        sources=[_source(by_id[doc_id].chunk, question) for doc_id in cited],
+        sources=[_source(_cited_chunk(by_doc[doc_id], hints.get(doc_id), answer_stems), question)
+                 for doc_id in cited],
     )

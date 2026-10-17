@@ -20,7 +20,14 @@ _SENSITIVE = ("зарплат", "оклад", "преми", "телефон", "�
               "диагноз", "персональн", "личн", "дата рождения", "семейн")
 _THIRD_PARTY = ("коллег", "сотрудник", "руководител", "начальник", "директор", "друг", "чуж", "других",
                 "его ", "ее ", "её ", "их ", "у него", "у нее", "у неё")
-_FIRST_PERSON = ("мой", "моя", "мое", "моё", "мои", "моего", "моей", "мне", "у меня", "я ")
+_FIRST_PERSON = ("мой", "моя", "мое", "моё", "мою", "мои", "моего", "моей", "моих", "мне", "у меня", "я ")
+# "моего руководителя", "нашего коллеги": a possessive in front of another person is a third party
+_POSSESSIVE_OTHER = re.compile(
+    r"\b(?:мо[йяеёи]\w*|наш\w*)\s+(?:коллег|руководител|начальник|директор|сотрудник|друг|друз)\w*",
+)
+# Questions about the access policy itself ("кто видит персональные данные сотрудников?")
+# ask for a rule, not for someone's data: they go to the knowledge base.
+_ACCESS_POLICY = re.compile(r"\b(?:кто|кому)\b.*\b(?:видит|видят|видно|доступ\w*)|конфиденциальн")
 
 
 @dataclass
@@ -73,8 +80,8 @@ def check(db: Session, user: User, question: str) -> GuardResult | None:
         )
     sensitive = any(s in text for s in _SENSITIVE)
     third_party = any(t in text for t in _THIRD_PARTY)
-    first_person = any(f" {f}" in text for f in _FIRST_PERSON)
-    if sensitive and third_party and not first_person:
+    first_person = any(f" {f}" in _POSSESSIVE_OTHER.sub(" ", text) for f in _FIRST_PERSON)
+    if sensitive and third_party and not first_person and not _ACCESS_POLICY.search(text):
         return GuardResult(
             "personal_data",
             "Я не раскрываю персональные данные других сотрудников. Если вопрос касается ваших данных, "

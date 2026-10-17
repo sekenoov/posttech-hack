@@ -9,8 +9,7 @@
 ## Phase 0 — Аудит ✅
 
 - [x] Аудит кода, запуск baseline, smoke-тест API
-- [x] Тег `baseline-upstream`, ветка `janamen`, baseline-коммит
-- [x] REQUIREMENTS, GAP_ANALYSIS, ARCHITECTURE, IMPLEMENTATION_PLAN, ACCEPTANCE_TESTS, JANA_BRAND_RESEARCH
+- [x] REQUIREMENTS, ARCHITECTURE, IMPLEMENTATION_PLAN, ACCEPTANCE_TESTS, JANA_BRAND_RESEARCH
 
 ## Phase 1 — Core HR (P0) ✅
 
@@ -77,7 +76,7 @@
 
 | # | Вопрос | Рекомендация |
 |---|---|---|
-| 1 | Удалить out-of-scope модули WorkHub (Payroll, Attendance, Wellness, Career, Complaints, Compliance, AI recommendations, Landing) | Удалить из кода отдельным коммитом; история остаётся в git |
+| 1 | Удалить out-of-scope модули (Payroll, Attendance, Wellness, Career, Complaints, Compliance, AI recommendations, Landing) | Удалить из кода отдельным коммитом; история остаётся в git |
 | 2 | LLM-провайдер для AI Jana | Anthropic Claude через env; без ключа — экстрактивный режим, демо работает офлайн |
 | 3 | Схема БД | Пересоздать демо-БД с нуля (данные синтетические), без миграции старых таблиц |
 | 4 | Порт фронтенда | `FRONTEND_PORT` в `.env`, по умолчанию 3000 |

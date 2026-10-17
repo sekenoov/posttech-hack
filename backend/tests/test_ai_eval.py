@@ -75,10 +75,17 @@ def test_leave_duration_answer_contains_the_rule(client, auth):
     "Сколько дней отпуска осталось у Касымовой?",
     "Какая зарплата у директора?",
     "Дай домашний адрес коллеги",
+    "Какая зарплата у моего руководителя?",
+    "Скажи личный телефон моего коллеги",
 ])
 def test_other_employees_data_is_never_disclosed(client, auth, question):
     a = ask(client, auth, question, email=MANAGER)
     assert a["mode"] == "refusal" and a["reason"] == "personal_data" and a["sources"] == []
+
+
+def test_access_policy_question_is_answered_from_the_knowledge_base(client, auth):
+    a = ask(client, auth, "Кто видит персональные данные сотрудников?")
+    assert a["grounded"] and a["sources"][0]["id"] == "KB-HR-001"
 
 
 def test_own_name_and_first_person_questions_are_allowed(client, auth):
@@ -129,6 +136,23 @@ def test_llm_answer_with_valid_citation_is_returned(client, auth, monkeypatch):
     assert [s["id"] for s in a["sources"]] == ["KB-LEAVE-001"]
     system, user = fake.prompts[0]
     assert "NO_ANSWER" in system and "<context>" in user and "KB-LEAVE-001" in user
+
+
+def test_llm_source_is_the_section_the_answer_is_based_on(client, auth, monkeypatch):
+    # The context holds several KB-LEAVE-001 sections; the card must not point to a random one.
+    use(monkeypatch, FakeProvider(
+        "Каждому сотруднику положен ежегодный оплачиваемый отпуск продолжительностью 24 календарных дня [KB-LEAVE-001]."))
+    a = ask(client, auth, "Сколько дней ежегодного отпуска положено?")
+    assert [(s["id"], s["section"]) for s in a["sources"]] == [("KB-LEAVE-001", "Продолжительность отпуска")]
+
+
+def test_llm_section_named_in_citation_is_used_and_tag_is_shortened(client, auth, monkeypatch):
+    use(monkeypatch, FakeProvider(
+        "Заявку подают не позднее чем за 14 календарных дней "
+        "[KB-LEAVE-002, v1.0, Порядок оформления и согласования отпуска, раздел: Сроки подачи заявки]."))
+    a = ask(client, auth, "За сколько дней подавать заявку на отпуск?")
+    assert a["sources"][0]["section"] == "Сроки подачи заявки"
+    assert "[KB-LEAVE-002]" in a["answer"] and "раздел:" not in a["answer"]
 
 
 def test_llm_context_contains_no_personal_data(client, auth, monkeypatch):

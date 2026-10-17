@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { Alert, Box, Button, Grid, LinearProgress, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import AssignmentProgress from '../components/academy/AssignmentProgress';
+import RecentNotificationsCard from '../components/notifications/RecentNotificationsCard';
 import LockIcon from '@mui/icons-material/LockOutlined';
 import useApi from '../hooks/useApi';
 import api, { errorMessage } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationsContext';
 import { AsyncContent, InfoAlert, PageHeader, SectionCard } from '../components/common/ui';
 import { useDeptName, useT } from '../i18n';
 import { tokens } from '../theme/tokens';
@@ -113,6 +115,7 @@ export default function ProfilePage() {
   const deptName = useDeptName();
   const result = useApi('/me');
   const { setUser } = useAuth();
+  const { items: notifications } = useNotifications();
   const [saved, setSaved] = useState(false);
 
   return (
@@ -122,7 +125,7 @@ export default function ProfilePage() {
         {(p) => (
           <Grid container spacing={2}>
             <Grid item xs={12} lg={8}>
-              <SectionCard title={t('profile.official')}
+              <SectionCard title={t('profile.official')} sx={{ height: 'auto' }}
                 action={<LockIcon fontSize="small" sx={{ color: tokens.textMuted }} titleAccess={t('profile.officialHint')} />}>
                 <InfoAlert sx={{ mb: 2.5 }}>{t('profile.officialHint')}</InfoAlert>
                 <Grid container spacing={2.5}>
@@ -142,6 +145,9 @@ export default function ProfilePage() {
                 </Typography>
               </SectionCard>
               <Box sx={{ mt: 2 }}><LearningSection /></Box>
+              <Box sx={{ mt: 2 }}>
+                <RecentNotificationsCard title={t('profile.notifications')} items={notifications.slice(0, 5)} />
+              </Box>
             </Grid>
             <Grid item xs={12} lg={4}>
               <Stack spacing={2}>

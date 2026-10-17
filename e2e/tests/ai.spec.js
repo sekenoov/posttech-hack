@@ -17,7 +17,7 @@ test('S5 — grounded answer shows the source document and opens it', async ({ p
   const answer = lastBot(page);
   await expect(answer).toContainText('24 календарных дня');
   await expect(answer).toContainText('Источники');
-  await expect(answer.getByText('KB-LEAVE-001 · v1.0')).toBeVisible();
+  await expect(answer.getByText('KB-LEAVE-001 v1.0')).toBeVisible();
   await shot(page, 's5-grounded-answer');
 
   await answer.getByRole('link', { name: /Политика ежегодного оплачиваемого отпуска/ }).click();
@@ -34,7 +34,7 @@ test('S6 — question outside the knowledge base is refused and escalated to HR'
 
   const answer = lastBot(page);
   await expect(answer).toContainText('Нет подтверждённой информации');
-  await expect(answer).toContainText('обратитесь, пожалуйста, в HR');
+  await expect(answer).toContainText('Обратитесь, пожалуйста, в HR');
   await expect(answer.getByText('Источники')).toHaveCount(0);
   await answer.getByRole('button', { name: 'Обратиться в HR' }).click();
   await expect(answer).toContainText('Вопрос передан в HR');

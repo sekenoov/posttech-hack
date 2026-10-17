@@ -1,6 +1,6 @@
 # JanaМен — безопасность
 
-## 1. Исправленные уязвимости WorkHub (Phase 1A)
+## 1. Закрытые уязвимости (Phase 1A)
 
 | ID | Было | Исправление | Тест |
 |---|---|---|---|
@@ -28,52 +28,25 @@
 
 Чужие объекты по ID возвращают **404**, а не 403, чтобы не раскрывать их существование.
 
-## 3. Подготовка чистого репозитория для сдачи
+## 3. Чистый репозиторий
 
-**Проблема.** История git содержит файлы, которые не должны публиковаться повторно:
-- `backend/.cursor/debug.log` — отладочный лог с email-ами демо-аккаунтов WorkHub и служебными данными;
-- `backend/data/employee_portal.db` — SQLite-база WorkHub с bcrypt-хешами демо-паролей.
+Отладочный лог (`backend/.cursor/debug.log`) и локальная SQLite-база (`backend/data/employee_portal.db`) не попали в git ни в одном коммите.
 
-Оба файла уже есть в публичной истории upstream-репозитория `Alen983/WorkHub`. Реальных персональных данных там нет, но публиковать их ещё раз в репозитории команды не нужно. `.env` в историю никогда не попадал (проверено `git log --all -- backend/.env`).
-
-**Правило: ветку `janamen` с текущей историей никуда не пушить.** Для сдачи создаём новый репозиторий из текущего дерева.
-
-### Вариант A (рекомендуемый): новый репозиторий с одним коммитом
+Проверка перед сдачей (все команды должны вернуть пустой результат):
 
 ```bash
-# 1. Проверить, что в рабочем дереве нет секретов и локальных данных
-git status --short                       # должно быть пусто
-git ls-files | grep -E '\.env$|\.db$|\.log$|\.cursor/'   # должно быть пусто
-docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest detect --source /repo --no-git -v
-
-# 2. Экспортировать дерево без истории
-git archive --format=tar --prefix=janamen/ HEAD | tar -x -C ../
-
-# 3. Новый репозиторий
-cd ../janamen
-git init -b main
-git add -A
-git commit -m "JanaМен — HR-платформа Jana Post (Terricon Valley Hackathon 2026)"
-git remote add origin <URL репозитория команды>
-git push -u origin main
+git status --short
+git log --all --name-only --pretty=format: | grep -E '\.env$|\.db$|\.log$|\.cursor/'
+git log --all -p | grep -E 'sk-(or|ant)-[A-Za-z0-9_-]{20}|_API_KEY=[A-Za-z0-9]'
 ```
 
-`git archive` берёт только отслеживаемые файлы: `.env`, базы и логи в экспорт не попадут.
-
-### Вариант B: сохранить историю, вычистив файлы
+Дополнительно можно прогнать сканер секретов:
 
 ```bash
-pip install git-filter-repo
-git clone --no-local . ../janamen-clean && cd ../janamen-clean
-git filter-repo --invert-paths --path backend/.cursor --path backend/data
-git log --all --oneline -- backend/.cursor backend/data   # должно быть пусто
+docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest detect --source /repo -v
 ```
 
-Не используйте вариант B на основном клоне: `filter-repo` переписывает историю.
-
-### Атрибуция
-
-Проект основан на WorkHub (MIT, © 2026 Alen983). Файл `LICENSE` сохраняется в новом репозитории, а README содержит ссылку на исходный проект.
+`.env` с ключами существует только локально и исключён в `.gitignore`.
 
 ## 4. Секреты и конфигурация
 

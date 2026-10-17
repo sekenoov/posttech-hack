@@ -9,6 +9,7 @@ export const fmtDateTime = (value) => (value ? format(toDate(value), 'd MMM yyyy
 export const fmtPeriod = (start, end) => {
   const s = toDate(start);
   const e = toDate(end);
+  if (s.getTime() === e.getTime()) return format(s, 'd MMM yyyy');
   if (s.getFullYear() === e.getFullYear()) {
     return `${format(s, s.getMonth() === e.getMonth() ? 'd' : 'd MMM')} - ${format(e, 'd MMM yyyy')}`;
   }

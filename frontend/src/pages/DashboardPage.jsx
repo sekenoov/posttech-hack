@@ -1,22 +1,64 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Button, Grid, List, ListItemButton, ListItemText, Stack, Typography } from '@mui/material';
+import { Box, Button, Grid, Stack, Typography } from '@mui/material';
 import BeachIcon from '@mui/icons-material/BeachAccessOutlined';
 import HourglassIcon from '@mui/icons-material/HourglassEmptyRounded';
 import NotificationsIcon from '@mui/icons-material/NotificationsNoneRounded';
 import GroupsIcon from '@mui/icons-material/GroupsOutlined';
 import BadgeIcon from '@mui/icons-material/BadgeOutlined';
 import AddIcon from '@mui/icons-material/AddRounded';
+import EventNoteIcon from '@mui/icons-material/EventNoteOutlined';
 import SchoolIcon from '@mui/icons-material/SchoolOutlined';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import AssignmentProgress from '../components/academy/AssignmentProgress';
 import useApi from '../hooks/useApi';
 import { AsyncContent, EmptyState, KpiCard, PageHeader, SectionCard } from '../components/common/ui';
 import RequestRow from '../components/requests/RequestRow';
-import { useOpenNotification } from '../components/layout/NotificationBell';
+import RecentNotificationsCard from '../components/notifications/RecentNotificationsCard';
 import { useNotifications } from '../context/NotificationsContext';
 import { useDeptName, useT } from '../i18n';
 import { tokens } from '../theme/tokens';
-import { fmtDate, fmtRelative } from '../utils/format';
+import { fmtDate } from '../utils/format';
+
+/** The employee's main HR services, one tap each (demo scenario 1: "быстрые сервисы"). */
+function QuickServices({ available, teamPending }) {
+  const t = useT();
+  const services = [
+    { to: '/requests/new', label: t('dashboard.newVacation'), hint: t('dashboard.qsVacationHint', { n: available }), icon: AddIcon, primary: true },
+    { to: '/requests', label: t('dashboard.qsRequests'), hint: t('dashboard.qsRequestsHint'), icon: EventNoteIcon },
+    { to: '/academy', label: t('dashboard.qsLearning'), hint: t('dashboard.qsLearningHint'), icon: SchoolIcon },
+    { to: '/assistant', label: t('dashboard.askAi'), hint: t('dashboard.qsAiHint'), icon: AutoAwesomeIcon },
+  ];
+  if (teamPending != null) {
+    services.push({ to: '/team', label: t('dashboard.reviewTeam'), hint: t('dashboard.qsTeamHint', { n: teamPending }), icon: GroupsIcon });
+  }
+  return (
+    <Box component="section" aria-labelledby="quick-services" sx={{ mb: 3 }}>
+      <Typography id="quick-services" variant="h3" component="h2" sx={{ mb: 1.5 }}>{t('dashboard.quickActions')}</Typography>
+      <Box sx={{ display: 'grid', gap: 1.5,
+        gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: `repeat(${services.length}, minmax(0, 1fr))` } }}>
+        {services.map(({ to, label, hint, icon: Icon, primary }) => (
+          <Box key={to} component={RouterLink} to={to}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 1, p: 2, borderRadius: `${tokens.radiusCard}px`,
+              textDecoration: 'none', border: `1px solid ${primary ? tokens.primaryStrong : tokens.border}`,
+              bgcolor: primary ? tokens.primaryStrong : 'background.paper', color: primary ? '#fff' : tokens.text,
+              transition: 'border-color .15s, background-color .15s',
+              '&:hover': primary ? { bgcolor: tokens.primaryHover } : { borderColor: tokens.primary } }}>
+            <Box sx={{ width: 36, height: 36, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              bgcolor: primary ? 'rgba(255,255,255,0.18)' : tokens.primarySoft, color: primary ? '#fff' : tokens.primary }}>
+              <Icon fontSize="small" />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography fontWeight={600} sx={{ lineHeight: 1.3 }}>{label}</Typography>
+              <Typography variant="caption" component="div" sx={{ mt: 0.25, color: primary ? 'rgba(255,255,255,0.85)' : tokens.textMuted }}>
+                {hint}
+              </Typography>
+            </Box>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+}
 
 function ProfileSummary({ profile }) {
   const t = useT();
@@ -66,30 +108,6 @@ function LearningCard({ learning }) {
   );
 }
 
-function NotificationsCard({ notifications }) {
-  const t = useT();
-  const open = useOpenNotification();
-  return (
-    <SectionCard title={t('dashboard.recentNotifications')}
-      action={<Button size="small" component={RouterLink} to="/notifications">{t('common.showAll')}</Button>}>
-      {notifications.items.length === 0 ? (
-        <Typography color="text.secondary" sx={{ py: 2 }}>{t('dashboard.noNotifications')}</Typography>
-      ) : (
-        <List dense disablePadding>
-          {notifications.items.map((n) => (
-            <ListItemButton key={n.id} onClick={() => open(n)} sx={{ px: 1, alignItems: 'flex-start' }}>
-              <Box sx={{ width: 8, height: 8, borderRadius: '50%', mt: 1, mr: 1.25, flexShrink: 0,
-                bgcolor: n.is_read ? tokens.border : tokens.primary }} />
-              <ListItemText primary={n.title} secondary={fmtRelative(n.created_at)}
-                primaryTypographyProps={{ fontWeight: n.is_read ? 500 : 600, fontSize: 14 }} />
-            </ListItemButton>
-          ))}
-        </List>
-      )}
-    </SectionCard>
-  );
-}
-
 export default function DashboardPage() {
   const t = useT();
   const deptName = useDeptName();
@@ -109,11 +127,9 @@ export default function DashboardPage() {
             <PageHeader
               title={t('dashboard.greeting', { name: profile.first_name })}
               subtitle={`${profile.position}, ${deptName(profile.department)}`}
-              actions={<>
-                <Button variant="outlined" startIcon={<AutoAwesomeIcon />} component={RouterLink} to="/assistant">{t('dashboard.askAi')}</Button>
-                <Button variant="contained" startIcon={<AddIcon />} component={RouterLink} to="/requests/new">{t('dashboard.newVacation')}</Button>
-              </>}
             />
+
+            <QuickServices available={b.available_days} teamPending={data.team_pending_count} />
 
             <Grid container spacing={2} sx={{ mb: 3 }}>
               <Grid item xs={12} sm={6} lg={3}>
@@ -169,7 +185,7 @@ export default function DashboardPage() {
                 <Stack spacing={2}>
                   <LearningCard learning={data.learning} />
                   <ProfileSummary profile={profile} />
-                  <NotificationsCard notifications={data.notifications} />
+                  <RecentNotificationsCard title={t('dashboard.recentNotifications')} items={data.notifications.items} />
                 </Stack>
               </Grid>
             </Grid>
