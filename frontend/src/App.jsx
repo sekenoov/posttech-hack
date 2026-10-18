@@ -10,20 +10,44 @@ import { ForbiddenState, LoadingState, NotFoundState } from './components/common
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const RequestsPage = lazy(() => import('./pages/RequestsPage'));
-const RequestNewPage = lazy(() => import('./pages/RequestNewPage'));
-const RequestDetailPage = lazy(() => import('./pages/RequestDetailPage'));
-const TeamPage = lazy(() => import('./pages/TeamPage'));
-const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
-const AcademyPage = lazy(() => import('./pages/AcademyPage'));
-const CoursePage = lazy(() => import('./pages/CoursePage'));
-const AssistantPage = lazy(() => import('./pages/AssistantPage'));
-const KnowledgePage = lazy(() => import('./pages/KnowledgePage'));
-const EmployeesPage = lazy(() => import('./pages/admin/EmployeesPage'));
-const AcademyAdminPage = lazy(() => import('./pages/admin/AcademyAdminPage'));
-const KnowledgeAdminPage = lazy(() => import('./pages/admin/KnowledgeAdminPage'));
-const IntegrationsPage = lazy(() => import('./pages/admin/IntegrationsPage'));
+// A tab opened before a rebuild still runs the old bundle and asks for page chunks
+// whose hashed names no longer exist. Reload once to pick up the new build instead
+// of rendering a blank page; the flag stops a reload loop if the chunk is really gone.
+const RELOAD_FLAG = 'jm-chunk-reload';
+
+function lazyPage(load) {
+  return lazy(() => load().then(
+    (module) => {
+      try { sessionStorage.removeItem(RELOAD_FLAG); } catch { /* storage unavailable */ }
+      return module;
+    },
+    (error) => {
+      let reloaded = true;
+      try {
+        reloaded = sessionStorage.getItem(RELOAD_FLAG) === '1';
+        if (!reloaded) sessionStorage.setItem(RELOAD_FLAG, '1');
+      } catch { /* storage unavailable: do not risk a loop */ }
+      if (reloaded) throw error;
+      window.location.reload();
+      return new Promise(() => {});
+    },
+  ));
+}
+
+const ProfilePage = lazyPage(() => import('./pages/ProfilePage'));
+const RequestsPage = lazyPage(() => import('./pages/RequestsPage'));
+const RequestNewPage = lazyPage(() => import('./pages/RequestNewPage'));
+const RequestDetailPage = lazyPage(() => import('./pages/RequestDetailPage'));
+const TeamPage = lazyPage(() => import('./pages/TeamPage'));
+const NotificationsPage = lazyPage(() => import('./pages/NotificationsPage'));
+const AcademyPage = lazyPage(() => import('./pages/AcademyPage'));
+const CoursePage = lazyPage(() => import('./pages/CoursePage'));
+const AssistantPage = lazyPage(() => import('./pages/AssistantPage'));
+const KnowledgePage = lazyPage(() => import('./pages/KnowledgePage'));
+const EmployeesPage = lazyPage(() => import('./pages/admin/EmployeesPage'));
+const AcademyAdminPage = lazyPage(() => import('./pages/admin/AcademyAdminPage'));
+const KnowledgeAdminPage = lazyPage(() => import('./pages/admin/KnowledgeAdminPage'));
+const IntegrationsPage = lazyPage(() => import('./pages/admin/IntegrationsPage'));
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
