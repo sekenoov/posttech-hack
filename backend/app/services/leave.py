@@ -1,4 +1,5 @@
-"""Vacation request workflow: pending -> approved | rejected | cancelled.
+"""Vacation request workflow: pending -> approved | rejected | cancelled,
+and approved -> pending when the approval is revoked before the leave starts.
 
 All state transitions go through this module so that history, balance,
 notifications and the Documentolog hand-off can never be skipped.
@@ -10,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.integrations import get_docflow_provider, log_event
 from app.models import LeaveRequest, LeaveRequestHistory, RequestStatus, User, utcnow
-from app.permissions import can_decide_request
+from app.permissions import can_decide_request, can_revoke_approval
 from app.services.notifications import NotificationType, notify
 from app.services.views import get_or_create_balance, pending_days
 
@@ -126,6 +127,46 @@ def decide(db: Session, actor: User, request: LeaveRequest, decision: str, comme
     return request
 
 
+def revoke_approval(db: Session, actor: User, request: LeaveRequest, comment: str | None,
+                    today: date | None = None) -> LeaveRequest:
+    """Approved -> pending: days go back to the balance, the leave order is withdrawn."""
+    today = today or date.today()
+    if not can_revoke_approval(actor, request, today):
+        if request.employee_id == actor.id:
+            raise _error(403, "Нельзя отозвать согласование собственной заявки")
+        if request.status != RequestStatus.APPROVED:
+            raise _error(409, "Отозвать можно только согласованную заявку")
+        if not can_decide_request(actor, request):
+            raise _error(403, "Отозвать согласование может только непосредственный руководитель сотрудника или HR")
+        raise _error(409, "Отпуск уже начался: отозвать согласование нельзя")
+
+    comment = (comment or "").strip() or None
+    original_decider_id = request.decided_by_id
+    balance = get_or_create_balance(db, request.employee_id)
+    balance.used_days = max(0, balance.used_days - request.days)
+    _withdraw_from_docflow(db, request)
+    request.status = RequestStatus.PENDING
+    request.decided_by_id = None
+    request.decided_at = None
+    request.decision_comment = None
+    _log(db, request, RequestStatus.APPROVED, RequestStatus.PENDING, actor, comment)
+
+    period = f"{_fmt(request.start_date)}-{_fmt(request.end_date)}"
+    reason = f" Причина: {comment}" if comment else ""
+    notify(db, request.employee_id, NotificationType.REQUEST_REVOKED,
+           title="Согласование заявки отозвано",
+           body=f"{period}, {request.days} дн. Отозвал(а): {actor.full_name}. Заявка снова на рассмотрении.{reason}",
+           link=f"/requests/{request.id}")
+    if original_decider_id and original_decider_id != actor.id:
+        notify(db, original_decider_id, NotificationType.REQUEST_REVOKED,
+               title="Ваше согласование отозвано",
+               body=f"{request.employee.full_name}: {period}. Отозвал(а): {actor.full_name}.{reason}",
+               link=f"/requests/{request.id}")
+    db.commit()
+    db.refresh(request)
+    return request
+
+
 def cancel(db: Session, actor: User, request: LeaveRequest) -> LeaveRequest:
     if request.employee_id != actor.id:
         raise _error(403, "Отозвать можно только собственную заявку")
@@ -162,3 +203,16 @@ def _send_to_docflow(db: Session, request: LeaveRequest) -> None:
         log_event(db, provider.system, "submit_leave_order", "ok", result.document_id, payload)
     except Exception as exc:  # docflow outage must not block the approval itself
         log_event(db, provider.system, "submit_leave_order", "error", None, {**payload, "error": str(exc)})
+
+
+def _withdraw_from_docflow(db: Session, request: LeaveRequest) -> None:
+    if not request.docflow_ref:
+        return
+    provider = get_docflow_provider()
+    payload = {"request_id": request.id, "document_id": request.docflow_ref}
+    try:
+        result = provider.cancel_leave_order(document_id=request.docflow_ref, request_id=request.id)
+        log_event(db, provider.system, "cancel_leave_order", "ok", result.document_id, payload)
+    except Exception as exc:  # docflow outage must not block the revocation itself
+        log_event(db, provider.system, "cancel_leave_order", "error", request.docflow_ref, {**payload, "error": str(exc)})
+    request.docflow_ref = None

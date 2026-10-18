@@ -3,13 +3,15 @@
 Every endpoint that touches another person's data must go through one of the
 helpers below; the frontend only hides controls for convenience.
 """
+from datetime import date
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.auth import decode_token
 from app.database import get_db
-from app.models import LeaveRequest, Role, User
+from app.models import LeaveRequest, RequestStatus, Role, User
 
 _bearer = HTTPBearer(auto_error=False)
 
@@ -67,6 +69,12 @@ def can_view_employee(actor: User, target: User) -> bool:
 
 def can_view_request(actor: User, request: LeaveRequest) -> bool:
     return can_view_employee(actor, request.employee)
+
+
+def can_revoke_approval(actor: User, request: LeaveRequest, today: date | None = None) -> bool:
+    """Whoever may decide can take an approval back, but only before the leave starts."""
+    return (request.status == RequestStatus.APPROVED and can_decide_request(actor, request)
+            and request.start_date > (today or date.today()))
 
 
 def can_decide_request(actor: User, request: LeaveRequest) -> bool:

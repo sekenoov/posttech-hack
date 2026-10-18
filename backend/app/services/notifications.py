@@ -8,6 +8,7 @@ class NotificationType:
     REQUEST_APPROVED = "request_approved"
     REQUEST_REJECTED = "request_rejected"
     REQUEST_CANCELLED = "request_cancelled"   # to the approver
+    REQUEST_REVOKED = "request_revoked"       # approval withdrawn, to the employee
     COURSE_ASSIGNED = "course_assigned"
     COURSE_COMPLETED = "course_completed"
     HR_ESCALATION = "hr_escalation"

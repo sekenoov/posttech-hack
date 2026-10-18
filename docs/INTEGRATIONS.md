@@ -35,9 +35,9 @@ seed.py / sync ─────► HRMasterDataProvider ──► Mock1CZup      
 
 | | |
 |---|---|
-| Порт | `DocumentFlowProvider.submit_leave_order(request_id, employee_code, full_name, start_date, end_date, days)` |
+| Порт | `DocumentFlowProvider.submit_leave_order(request_id, employee_code, full_name, start_date, end_date, days)`; `cancel_leave_order(document_id, request_id)` при отзыве согласования |
 | Mock | `mock_documentolog.py` возвращает номер `DL-<год>-<номер заявки>` и статус `sent_for_signing` |
-| Когда вызывается | сразу после согласования заявки (`services/leave.py`) |
+| Когда вызывается | сразу после согласования заявки (`services/leave.py`); при отзыве согласования приказ отзывается, `docflow_ref` очищается, при повторном согласовании уходит новый |
 | Результат | номер документа сохраняется в `LeaveRequest.docflow_ref` и показывается в карточке заявки |
 | Сбой | не блокирует согласование: пишется событие `error` в журнал интеграций; автоматическая повторная отправка — в развитии (см. ниже) |
 

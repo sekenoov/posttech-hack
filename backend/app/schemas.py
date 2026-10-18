@@ -109,6 +109,10 @@ class DecisionIn(StrictModel):
     comment: Optional[str] = Field(default=None, max_length=500)
 
 
+class RevokeIn(StrictModel):
+    comment: Optional[str] = Field(default=None, max_length=500)
+
+
 class HistoryEntryOut(BaseModel):
     id: int
     from_status: Optional[str] = None
@@ -138,6 +142,7 @@ class LeaveRequestDetailOut(LeaveRequestOut):
     history: list[HistoryEntryOut]
     can_decide: bool
     can_cancel: bool
+    can_revoke: bool = False
 
 
 # --- notifications ------------------------------------------------------------

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import LeaveRequest, RequestStatus, User
-from app.permissions import can_decide_request, get_current_user, get_visible_request
+from app.permissions import can_decide_request, can_revoke_approval, get_current_user, get_visible_request
 from app.schemas import LeaveRequestCreate, LeaveRequestDetailOut, LeaveRequestOut
 from app.services import leave as leave_service
 from app.services.views import request_detail_out, request_out
@@ -18,6 +18,7 @@ def _detail(actor: User, r: LeaveRequest) -> LeaveRequestDetailOut:
         r,
         can_decide=r.status == RequestStatus.PENDING and can_decide_request(actor, r),
         can_cancel=r.status == RequestStatus.PENDING and r.employee_id == actor.id,
+        can_revoke=can_revoke_approval(actor, r),
     )
 
 

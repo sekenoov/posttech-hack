@@ -99,7 +99,8 @@ def request_out(r: LeaveRequest) -> LeaveRequestOut:
     )
 
 
-def request_detail_out(r: LeaveRequest, can_decide: bool, can_cancel: bool) -> LeaveRequestDetailOut:
+def request_detail_out(r: LeaveRequest, can_decide: bool, can_cancel: bool,
+                       can_revoke: bool = False) -> LeaveRequestDetailOut:
     return LeaveRequestDetailOut(
         **request_out(r).model_dump(),
         history=[
@@ -115,4 +116,5 @@ def request_detail_out(r: LeaveRequest, can_decide: bool, can_cancel: bool) -> L
         ],
         can_decide=can_decide,
         can_cancel=can_cancel,
+        can_revoke=can_revoke,
     )

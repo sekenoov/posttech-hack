@@ -118,3 +118,27 @@ test('mobile layout: drawer navigation works at 375px', async ({ browser }) => {
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Мои заявки');
   await page.close();
 });
+
+test('S2 — manager revokes an approval before the leave starts, the request is pending again', async ({ page }) => {
+  await login(page, USERS.employee);
+  await page.getByRole('link', { name: 'Оформить отпуск' }).click();
+  await page.getByLabel('Первый день отпуска').fill(isoInDays(170));
+  await page.getByLabel('Последний день отпуска').fill(isoInDays(171));
+  await page.getByRole('button', { name: 'Отправить на согласование' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Заявка отправлена руководителю' })).toBeVisible();
+  const requestUrl = page.url();
+  await logout(page);
+
+  await login(page, USERS.manager);
+  await page.goto(requestUrl);
+  await page.getByRole('button', { name: 'Согласовать' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Заявка согласована' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Отозвать согласование' }).click();
+  await page.getByLabel('Причина (необязательно)').fill('E2E: изменился график');
+  await page.getByRole('dialog').getByRole('button', { name: 'Отозвать согласование' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Согласование отозвано' })).toBeVisible();
+  await expect(page.getByText('На рассмотрении').first()).toBeVisible();
+  await expect(page.getByText('«E2E: изменился график»')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Согласовать' })).toBeVisible();
+});

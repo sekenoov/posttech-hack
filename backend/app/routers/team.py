@@ -9,7 +9,7 @@ from app.database import get_db
 from app.models import LeaveRequest, RequestStatus, Role, User
 from app.permissions import get_visible_request, not_found, require_roles
 from app.routers.requests import _detail
-from app.schemas import DecisionIn, LeaveRequestDetailOut, LeaveRequestOut, TeamMemberOut
+from app.schemas import DecisionIn, LeaveRequestDetailOut, LeaveRequestOut, RevokeIn, TeamMemberOut
 from app.services import leave as leave_service
 from app.services.views import balance_out, request_out
 
@@ -86,4 +86,17 @@ def decide(
 ):
     r = get_visible_request(db, actor, request_id)
     r = leave_service.decide(db, actor, r, body.decision, body.comment)
+    return _detail(actor, r)
+
+
+@router.post("/requests/{request_id}/revoke", response_model=LeaveRequestDetailOut)
+def revoke(
+    request_id: int,
+    body: RevokeIn,
+    actor: User = Depends(_team_lead),
+    db: Session = Depends(get_db),
+):
+    """Take an approval back before the leave starts: the request is pending again."""
+    r = get_visible_request(db, actor, request_id)
+    r = leave_service.revoke_approval(db, actor, r, body.comment)
     return _detail(actor, r)

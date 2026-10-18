@@ -11,12 +11,14 @@ import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationsContext';
 import { AsyncContent, PageHeader, SectionCard, StatusChip } from '../components/common/ui';
 import DecisionActions from '../components/requests/DecisionActions';
+import RevokeApproval from '../components/requests/RevokeApproval';
 import { useT } from '../i18n';
 import { tokens } from '../theme/tokens';
 import { fmtDateTime, fmtPeriod } from '../utils/format';
 
 const DOT = { pending: tokens.warning, approved: tokens.primary, rejected: tokens.danger, cancelled: tokens.textMuted };
 const HISTORY_LABEL = { pending: 'historyCreated', approved: 'historyApproved', rejected: 'historyRejected', cancelled: 'historyCancelled' };
+const historyLabel = (h) => (h.from_status === 'approved' && h.to_status === 'pending' ? 'historyRevoked' : HISTORY_LABEL[h.to_status]);
 
 function History({ items }) {
   const t = useT();
@@ -29,7 +31,7 @@ function History({ items }) {
           )}
           <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: DOT[h.to_status], mt: 0.5, flexShrink: 0, zIndex: 1 }} />
           <Box sx={{ minWidth: 0 }}>
-            <Typography fontWeight={600}>{t(`requests.${HISTORY_LABEL[h.to_status]}`)}</Typography>
+            <Typography fontWeight={600}>{t(`requests.${historyLabel(h)}`)}</Typography>
             <Typography variant="body2" color="text.secondary">
               {h.actor.full_name}{h.actor.position ? `, ${h.actor.position}` : ''}
             </Typography>
@@ -110,10 +112,13 @@ export default function RequestDetailPage() {
                       </Stack>
                     )}
 
-                    {(r.can_decide || r.can_cancel) && (
+                    {(r.can_decide || r.can_cancel || r.can_revoke) && (
                       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 3 }}>
                         {r.can_decide && (
                           <DecisionActions request={r} onDone={(_, d) => { setFlash(t(d === 'approve' ? 'requests.approved' : 'requests.rejected')); result.reload(); }} />
+                        )}
+                        {r.can_revoke && (
+                          <RevokeApproval request={r} onDone={() => { setFlash(t('requests.revoked')); result.reload(); }} />
                         )}
                         {r.can_cancel && <Button variant="outlined" color="inherit" onClick={cancel}>{t('requests.cancelRequest')}</Button>}
                       </Stack>
