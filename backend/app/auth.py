@@ -33,5 +33,5 @@ def decode_token(token: str) -> Optional[dict]:
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         return payload
-    except (JWTError, Exception) as e:
+    except (JWTError, Exception):
         return None

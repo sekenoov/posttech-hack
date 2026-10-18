@@ -65,8 +65,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Docker
-.dockerignore
+# Docker: .dockerignore files ARE tracked (they keep data/, .env and node_modules out of images)
 
 # OS
 Thumbs.db

@@ -35,7 +35,7 @@ flowchart LR
   REQ --> NOTIF
   ACAD --> NOTIF
   REQ & ACAD & NOTIF & AI --> DB
-  AI -. только текст базы знаний .-> LLM
+  AI -. фрагменты базы знаний + текст вопроса .-> LLM
   REQ --> PORTS
   PORTS --> ZUP & DOC
 ```
@@ -202,4 +202,4 @@ stateDiagram-v2
 
 ## 9. Запуск и конфигурация
 
-`docker compose up --build` поднимает два контейнера; backend при старте выполняет `seed.py` (идемпотентно) и проходит healthcheck, затем стартует frontend. Конфигурация — переменные из `.env` (см. `.env.example`): порты, `SECRET_KEY`, `LLM_PROVIDER`, `LLM_MODEL`, ключи провайдеров. Без `.env` всё работает: JWT-ключ генерируется случайно при старте, AI Jana работает в режиме «только база знаний».
+`docker compose up --build` поднимает два контейнера; backend при старте выполняет `seed.py` (идемпотентно) и проходит healthcheck, затем стартует frontend. Конфигурация — переменные из `.env` (см. `.env.example`): порты, `SECRET_KEY`, `LLM_PROVIDER`, `LLM_MODEL`, ключи провайдеров. Без `.env` всё работает: JWT-ключ генерируется один раз и хранится в томе с данными (`data/.secret_key`, права 600), поэтому перезапуск не разлогинивает пользователей; AI Jana работает в режиме «только база знаний».
