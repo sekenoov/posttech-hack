@@ -11,6 +11,7 @@ import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
 import EventIcon from '@mui/icons-material/EventOutlined';
 import SchoolIcon from '@mui/icons-material/SchoolOutlined';
+import ThumbDownIcon from '@mui/icons-material/ThumbDownOffAltOutlined';
 import useApi from '../hooks/useApi';
 import api, { errorMessage } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -65,7 +66,7 @@ function SourceCard({ source }) {
   );
 }
 
-function BotMessage({ msg, onEscalate }) {
+function BotMessage({ msg, onEscalate, onFeedback }) {
   const t = useT();
   const { user } = useAuth();
   const a = msg.answer;
@@ -105,6 +106,14 @@ function BotMessage({ msg, onEscalate }) {
                 </Button>
               )}
             </Stack>
+          )}
+          {a && a.mode !== 'refusal' && (
+            <Box sx={{ mt: 1.25 }}>
+              {msg.feedbackSent
+                ? <Typography variant="caption">{t('ai.feedbackThanks')}</Typography>
+                : <Button size="small" color="inherit" startIcon={<ThumbDownIcon fontSize="small" />} onClick={onFeedback}
+                    sx={{ color: tokens.textMuted }}>{t('ai.notHelpful')}</Button>}
+            </Box>
           )}
         </Box>
       </Box>
@@ -150,6 +159,21 @@ export default function AssistantPage() {
     }
   };
 
+  // «Не помогло»: anonymous negative_feedback event for the HR knowledge gap journal
+  const feedback = async (index) => {
+    const msg = messages[index];
+    const a = msg.answer;
+    try {
+      await api.post('/ai/feedback', {
+        question: msg.question, answer_mode: a.mode,
+        source_ids: [...new Set((a.sources || []).map((s) => s.id))].slice(0, 5),
+      });
+      setMessages((m) => m.map((x, i) => (i === index ? { ...x, feedbackSent: true } : x)));
+    } catch (err) {
+      setMessages((m) => [...m, { role: 'bot', text: errorMessage(err, t('ai.error')) }]);
+    }
+  };
+
   const escalate = async (index) => {
     const msg = messages[index];
     try {
@@ -181,7 +205,7 @@ export default function AssistantPage() {
           <Stack spacing={2.5}>
             {messages.map((m, i) => (m.role === 'user'
               ? <UserMessage key={i} text={m.text} />
-              : <BotMessage key={i} msg={m} onEscalate={() => escalate(i)} />))}
+              : <BotMessage key={i} msg={m} onEscalate={() => escalate(i)} onFeedback={() => feedback(i)} />))}
             {messages.length === 1 && (
               <Box sx={{ pl: { sm: 6 } }}>
                 <Typography variant="overline" color="text.secondary">{t('ai.suggestions')}</Typography>

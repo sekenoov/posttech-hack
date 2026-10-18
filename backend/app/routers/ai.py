@@ -3,7 +3,7 @@ from dataclasses import asdict
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.ai import assistant
+from app.ai import assistant, gaps
 from app.ai.knowledge import chunk_document
 from app.ai.llm import get_provider
 from app.database import get_db
@@ -21,7 +21,9 @@ _hr = require_roles(Role.HR)
 
 @router.post("/ai/ask", response_model=AnswerOut)
 def ask(body: AskIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return AnswerOut(**asdict(assistant.ask(db, user, body.question)))
+    answer = assistant.ask(db, user, body.question)
+    gaps.log_answer(db, body.question.strip(), answer)  # best effort, never raises
+    return AnswerOut(**asdict(answer))
 
 
 @router.get("/ai/status", response_model=AIStatusOut)

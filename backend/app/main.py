@@ -5,7 +5,7 @@ from app.config import settings
 from app.database import Base, engine
 from app.ai.knowledge import ensure_seeded
 from app.database import SessionLocal
-from app.routers import academy, admin, ai, auth, me, notifications, requests, team
+from app.routers import academy, admin, ai, auth, knowledge_gaps, me, notifications, requests, team
 
 Base.metadata.create_all(bind=engine)
 
@@ -19,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for module in (auth, me, requests, team, notifications, admin, academy, ai):
+for module in (auth, me, requests, team, notifications, admin, academy, ai, knowledge_gaps):
     app.include_router(module.router)
 app.include_router(academy.admin_router)
 
