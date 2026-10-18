@@ -39,10 +39,11 @@ function Field({ label, children }) {
   );
 }
 
-function GapDialog({ gap, onClose, onSaved }) {
+function GapDialog({ gap, documents, onClose, onSaved }) {
   const t = useT();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ status: gap.status, category: gap.category || '', hr_comment: gap.hr_comment || '' });
+  // Category = the knowledge base document this question belongs to; the retrieval candidate is preselected.
+  const [form, setForm] = useState({ status: gap.status, category: gap.category || gap.candidate_doc_id || '', hr_comment: gap.hr_comment || '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -50,7 +51,7 @@ function GapDialog({ gap, onClose, onSaved }) {
     setBusy(true);
     setError('');
     try {
-      const { data } = await api.patch(`/admin/knowledge-gaps/${gap.id}`, form);
+      const { data } = await api.patch(`/admin/knowledge-gaps/${gap.id}`, { ...form, category: form.category || null });
       onSaved(data);
     } catch (err) {
       setError(errorMessage(err, t('states.errorTitle')));
@@ -63,7 +64,7 @@ function GapDialog({ gap, onClose, onSaved }) {
   // saved or published until HR edits it and presses «Сохранить» there.
   const createArticle = () => {
     const params = new URLSearchParams({ draft: gap.question });
-    if (gap.candidate_doc_id) params.set('doc', gap.candidate_doc_id);
+    if (form.category) params.set('doc', form.category);
     navigate(`/admin/knowledge?${params.toString()}`);
   };
 
@@ -80,15 +81,16 @@ function GapDialog({ gap, onClose, onSaved }) {
           <Grid item xs={6}><Field label={t('gaps.col.type')}>{t(`gaps.type.${gap.event_type}`)}</Field></Grid>
           <Grid item xs={6}><Field label={t('gaps.col.reason')}>{t(`gaps.reason.${gap.reason}`)}</Field></Grid>
           <Grid item xs={6}><Field label={t('gaps.col.language')}>{gap.language}</Field></Grid>
-          <Grid item xs={6}><Field label={t('gaps.col.score')}>{gap.top_score ?? '—'}</Field></Grid>
-          <Grid item xs={6}><Field label={t('gaps.col.document')}>{gap.candidate_doc_id || '—'}</Field></Grid>
         </Grid>
         <Stack spacing={2}>
           <TextField select label={t('gaps.col.status')} value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}>
             {STATUSES.map((s) => <MenuItem key={s} value={s}>{t(`gaps.status.${s}`)}</MenuItem>)}
           </TextField>
-          <TextField label={t('gaps.category')} value={form.category} inputProps={{ maxLength: 100 }}
-            onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} />
+          <TextField select label={t('gaps.category')} value={form.category} helperText={t('gaps.categoryHint')}
+            onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}>
+            <MenuItem value="">{t('gaps.categoryNone')}</MenuItem>
+            {documents.map((d) => <MenuItem key={d.id} value={d.id}>{d.title}</MenuItem>)}
+          </TextField>
           <TextField label={t('gaps.comment')} value={form.hr_comment} multiline minRows={2} inputProps={{ maxLength: 2000 }}
             onChange={(e) => setForm((f) => ({ ...f, hr_comment: e.target.value }))} />
         </Stack>
@@ -115,6 +117,9 @@ export default function KnowledgeGapsPage() {
 
   const activeFilters = Object.fromEntries(Object.entries(filters).filter(([, v]) => v));
   const result = useApi('/admin/knowledge-gaps', { params: { ...activeFilters, page: page + 1, page_size: pageSize } });
+  const docs = useApi('/kb');
+  const documents = docs.data || [];
+  const docTitle = (id) => documents.find((d) => d.id === id)?.title || id;
   const set = (key) => (e) => { setPage(0); setFilters((f) => ({ ...f, [key]: e.target.value })); };
 
   const exportXlsx = async () => {
@@ -175,7 +180,7 @@ export default function KnowledgeGapsPage() {
               <Table size="small" sx={{ minWidth: 820 }}>
                 <TableHead>
                   <TableRow>
-                    {['date', 'question', 'type', 'language', 'reason', 'score', 'status'].map((k) => (
+                    {['date', 'question', 'type', 'language', 'reason', 'category', 'status'].map((k) => (
                       <TableCell key={k} sx={{ fontWeight: 600, color: tokens.textMuted, whiteSpace: 'nowrap' }}>{t(`gaps.col.${k}`)}</TableCell>
                     ))}
                   </TableRow>
@@ -190,7 +195,7 @@ export default function KnowledgeGapsPage() {
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>{t(`gaps.type.${g.event_type}`)}</TableCell>
                       <TableCell>{g.language}</TableCell>
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>{t(`gaps.reason.${g.reason}`)}</TableCell>
-                      <TableCell>{g.top_score ?? '—'}</TableCell>
+                      <TableCell sx={{ maxWidth: 220 }}><Typography variant="body2" noWrap>{g.category ? docTitle(g.category) : '—'}</Typography></TableCell>
                       <TableCell><GapStatusChip status={g.status} /></TableCell>
                     </TableRow>
                   ))}
@@ -205,7 +210,7 @@ export default function KnowledgeGapsPage() {
       </AsyncContent>
 
       {selected && (
-        <GapDialog gap={selected} onClose={() => setSelected(null)}
+        <GapDialog gap={selected} documents={documents} onClose={() => setSelected(null)}
           onSaved={() => { setSelected(null); setFlash(t('gaps.saved')); result.reload(); }} />
       )}
       <Snackbar open={Boolean(flash)} autoHideDuration={3000} onClose={() => setFlash('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>

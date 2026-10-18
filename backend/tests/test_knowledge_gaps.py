@@ -45,7 +45,8 @@ def test_no_match_event_is_created_for_unanswerable_question(client, auth, db):
     [e] = events(db)
     assert e.event_type == "no_match" and e.reason == "retrieval_below_threshold"
     assert e.question == OFF_TOPIC and e.language == "ru" and e.status == "new" and e.answer_mode == "refusal"
-    assert e.top_score is not None and e.top_score < 0.18 and e.candidate_doc_id.startswith("KB-")
+    assert e.candidate_doc_id.startswith("KB-")
+    assert not hasattr(e, "top_score")  # retrieval score is deliberately not kept
 
 
 def test_kazakh_question_gets_language_kk(client, auth, db):
@@ -73,7 +74,7 @@ def test_llm_no_answer_is_distinguished_from_retrieval_miss(client, auth, db, mo
     monkeypatch.setattr(assistant, "get_provider", lambda: FakeProvider("NO_ANSWER"))
     assert ask(client, auth, IN_KB)["mode"] == "refusal"
     [e] = events(db)
-    assert e.reason == "llm_no_answer" and e.top_score >= 0.18 and e.candidate_doc_id == "KB-LEAVE-001"
+    assert e.reason == "llm_no_answer" and e.candidate_doc_id == "KB-LEAVE-001"
 
 
 def test_provider_outage_with_grounded_fallback_is_not_a_gap(client, auth, db, monkeypatch):
@@ -89,7 +90,7 @@ def test_negative_feedback_is_its_own_type(client, auth, db):
     assert r.status_code == 201 and r.json() == {"recorded": True}
     [e] = events(db)
     assert e.event_type == "negative_feedback" and e.reason == "user_marked_unhelpful"
-    assert e.candidate_doc_id == "KB-LEAVE-001" and e.answer_mode == "extractive" and e.top_score is None
+    assert e.candidate_doc_id == "KB-LEAVE-001" and e.answer_mode == "extractive"
 
 
 def test_feedback_payload_is_validated(client, auth):
@@ -136,8 +137,8 @@ def test_filters_search_pagination_and_status_update(client, auth, db):
     detail = client.get(f"/admin/knowledge-gaps/{gap_id}", headers=h).json()
     assert detail["status"] == "new"
     upd = client.patch(f"/admin/knowledge-gaps/{gap_id}",
-                       json={"status": "reviewing", "category": "Офис", "hr_comment": "Добавить в FAQ"}, headers=h).json()
-    assert upd["status"] == "reviewing" and upd["category"] == "Офис"
+                       json={"status": "reviewing", "category": "KB-FAQ-001", "hr_comment": "Добавить в FAQ"}, headers=h).json()
+    assert upd["status"] == "reviewing" and upd["category"] == "KB-FAQ-001"
     assert client.get("/admin/knowledge-gaps", params={"status": "reviewing"}, headers=h).json()["total"] == 1
     assert client.get("/admin/knowledge-gaps", params={"status": "new"}, headers=h).json()["total"] == 3
 
@@ -146,6 +147,10 @@ def test_filters_search_pagination_and_status_update(client, auth, db):
     assert client.get("/admin/knowledge-gaps", params={"date_to": "2000-01-01"}, headers=h).json()["total"] == 0
 
     assert client.patch(f"/admin/knowledge-gaps/{gap_id}", json={"status": "deleted"}, headers=h).status_code == 422
+    # category is a knowledge base document: free text and unknown documents are rejected
+    assert client.patch(f"/admin/knowledge-gaps/{gap_id}", json={"category": "Офис"}, headers=h).status_code == 422
+    assert client.patch(f"/admin/knowledge-gaps/{gap_id}", json={"category": "KB-NOPE-999"}, headers=h).status_code == 422
+    assert client.patch(f"/admin/knowledge-gaps/{gap_id}", json={"category": None}, headers=h).json()["category"] is None
     assert client.patch(f"/admin/knowledge-gaps/{gap_id}", json={"question": "x"}, headers=h).status_code == 422
     assert client.get("/admin/knowledge-gaps/999999", headers=h).status_code == 404
     assert client.get("/admin/knowledge-gaps", params={"page_size": 500}, headers=h).status_code == 422
@@ -167,15 +172,21 @@ def test_export_has_columns_filter_freeze_and_respects_filters(client, auth, db)
                 headers=auth(EMPLOYEE))
     ws = load_workbook(io.BytesIO(_xlsx(client, auth))).active
     header = [c.value for c in ws[1]]
-    assert header == ["Date", "Question", "Language", "Feedback Type", "Retrieval Score", "Matched Document",
+    assert header == ["Date", "Question", "Language", "Feedback Type", "Matched Document",
                       "Response Status", "Review Status", "Category", "HR Comment"]
-    assert ws.max_row == 3 and ws.freeze_panes == "A2" and ws.auto_filter.ref == "A1:J3"
-    assert all(ws.column_dimensions[col].width >= 10 for col in "ABCDEFGHIJ")
+    assert ws.max_row == 3 and ws.freeze_panes == "A2" and ws.auto_filter.ref == "A1:I3"
+    assert all(ws.column_dimensions[col].width >= 10 for col in "ABCDEFGHI")
     types = {ws.cell(row=r, column=4).value for r in (2, 3)}
     assert types == {"no_match", "negative_feedback"}
 
     only_feedback = load_workbook(io.BytesIO(_xlsx(client, auth, event_type="negative_feedback"))).active
-    assert only_feedback.max_row == 2 and only_feedback.cell(row=2, column=6).value == "KB-LEAVE-001"
+    assert only_feedback.max_row == 2 and only_feedback.cell(row=2, column=5).value == "KB-LEAVE-001"
+
+    # the chosen category is exported as "id: title"
+    gap_id = events(db)[1].id
+    client.patch(f"/admin/knowledge-gaps/{gap_id}", json={"category": "KB-LEAVE-002"}, headers=auth(HR))
+    ws = load_workbook(io.BytesIO(_xlsx(client, auth, event_type="negative_feedback"))).active
+    assert ws.cell(row=2, column=8).value == "KB-LEAVE-002: Порядок оформления и согласования отпуска"
 
 
 def test_export_neutralises_formula_injection(client, auth, db):

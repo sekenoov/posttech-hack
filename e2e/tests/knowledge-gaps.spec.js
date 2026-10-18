@@ -37,6 +37,7 @@ test('Knowledge gaps: unanswered and unhelpful questions reach HR, export and dr
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Статус').click();
   await page.getByRole('option', { name: 'В работе' }).click();
+  await expect(dialog.getByText('Score')).toHaveCount(0);
   await dialog.getByLabel('Комментарий HR').fill('Уточнить раздел про согласование');
   await dialog.getByRole('button', { name: 'Сохранить' }).click();
   await expect(page.getByRole('alert').filter({ hasText: 'Запись обновлена' })).toBeVisible();
@@ -50,8 +51,12 @@ test('Knowledge gaps: unanswered and unhelpful questions reach HR, export and dr
   await page.getByLabel('Тип').click();
   await page.getByRole('option', { name: 'Все' }).click();
   await table.getByRole('row', { name: /Есть ли у нас ДМС\?/ }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Создать статью' }).click();
-  await expect(page).toHaveURL(/\/admin\/knowledge\?draft=/);
+  const gapDialog = page.getByRole('dialog');
+  await gapDialog.getByLabel('Категория').click();                      // where the question belongs
+  await page.getByRole('option', { name: 'Частые вопросы сотрудников' }).click();
+  await gapDialog.getByRole('button', { name: 'Создать статью' }).click();
+  await expect(page).toHaveURL(/\/admin\/knowledge\?draft=.*doc=KB-FAQ-001/);
+  await expect(page.getByLabel('Название')).toHaveValue('Частые вопросы сотрудников'); // editor opened in the chosen document
   await expect(page.getByText('добавлен в документ как черновик раздела')).toBeVisible();
   await expect(page.getByLabel(/Текст/)).toHaveValue(/## Есть ли у нас ДМС\?/);
   await shot(page, 'hr-gap-draft-article');

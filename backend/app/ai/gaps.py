@@ -83,8 +83,9 @@ def log_answer(db: Session, question: str, answer: Answer) -> KnowledgeGapEvent 
     try:
         if not (answer.mode == "refusal" and answer.reason == "no_relevant_info"):
             return None
-        # Read-only second look at retrieval: best candidate, and whether anything
-        # passed the relevance check (then the refusal came from the LLM).
+        # Read-only second look at retrieval: the best candidate document (default
+        # category for HR), and whether anything passed the relevance check
+        # (then the refusal came from the LLM).
         hits = get_retriever(db).search(question, k=3)
         top = hits[0] if hits else None
         reason = (GapReason.LLM_NO_ANSWER if any(h.relevant for h in hits)
@@ -94,7 +95,6 @@ def log_answer(db: Session, question: str, answer: Answer) -> KnowledgeGapEvent 
             reason=reason,
             question=mask(db, question),
             language=detect_language(question),
-            top_score=round(top.score, 3) if top else None,
             candidate_doc_id=top.chunk.doc_id if top else None,
             answer_mode=answer.mode,
         )
@@ -112,7 +112,6 @@ def log_feedback(db: Session, question: str, answer_mode: str, source_ids: list[
             reason=GapReason.USER_MARKED_UNHELPFUL,
             question=mask(db, question),
             language=detect_language(question),
-            top_score=None,
             candidate_doc_id=top_doc,
             answer_mode=answer_mode,
         )

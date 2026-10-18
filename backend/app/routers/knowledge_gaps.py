@@ -3,7 +3,7 @@ import io
 from datetime import date, datetime, time, timedelta
 from typing import Annotated, Literal, Optional
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
@@ -14,7 +14,7 @@ from sqlalchemy.orm import Query as SAQuery, Session
 
 from app.ai import gaps
 from app.database import get_db
-from app.models import KnowledgeGapEvent, Role, User
+from app.models import KnowledgeDocument, KnowledgeGapEvent, Role, User
 from app.permissions import get_current_user, not_found, require_roles
 from app.schemas import UTCDateTime
 
@@ -43,7 +43,6 @@ class GapOut(BaseModel):
     reason: str
     question: str
     language: str
-    top_score: Optional[float] = None
     candidate_doc_id: Optional[str] = None
     answer_mode: str
     status: str
@@ -60,7 +59,7 @@ class GapPage(BaseModel):
 
 class GapUpdate(_Strict):
     status: Optional[Literal["new", "reviewing", "resolved", "ignored"]] = None
-    category: Optional[str] = Field(default=None, max_length=100)
+    category: Optional[str] = Field(default=None, pattern=r"^KB-[A-Z]+-\d{3}$")  # knowledge document id; null clears
     hr_comment: Optional[str] = Field(default=None, max_length=2000)
 
 
@@ -120,8 +119,8 @@ def list_gaps(
 
 
 _COLUMNS = [
-    ("Date", 20), ("Question", 60), ("Language", 10), ("Feedback Type", 18), ("Retrieval Score", 15),
-    ("Matched Document", 18), ("Response Status", 26), ("Review Status", 14), ("Category", 20), ("HR Comment", 40),
+    ("Date", 20), ("Question", 60), ("Language", 10), ("Feedback Type", 18), ("Matched Document", 18),
+    ("Response Status", 26), ("Review Status", 14), ("Category", 40), ("HR Comment", 40),
 ]
 _FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r", "＝", "＋", "－", "＠")
 
@@ -139,6 +138,7 @@ def _put(ws, row: int, col: int, value):
 def export_gaps(filters: _Filters = Depends(), _: User = Depends(_hr), db: Session = Depends(get_db)):
     """Same filters as the list. No employee identifiers: none are stored."""
     rows = _filtered(db, *filters.args).limit(MAX_EXPORT_ROWS).all()
+    titles = dict(db.query(KnowledgeDocument.id, KnowledgeDocument.title))
     wb = Workbook()
     ws = wb.active
     ws.title = "Knowledge gaps"
@@ -151,8 +151,9 @@ def export_gaps(filters: _Filters = Depends(), _: User = Depends(_hr), db: Sessi
     for r, e in enumerate(rows, start=2):
         values = [
             e.created_at.strftime("%Y-%m-%d %H:%M UTC") if e.created_at else "",
-            e.question, e.language, e.event_type, e.top_score, e.candidate_doc_id or "",
-            f"{e.reason} ({e.answer_mode})", e.status, e.category or "", e.hr_comment or "",
+            e.question, e.language, e.event_type, e.candidate_doc_id or "",
+            f"{e.reason} ({e.answer_mode})", e.status,
+            f"{e.category}: {titles.get(e.category, '')}".rstrip(": ") if e.category else "", e.hr_comment or "",
         ]
         for c, value in enumerate(values, start=1):
             _put(ws, r, c, value)
@@ -187,7 +188,9 @@ def update_gap(gap_id: int, body: GapUpdate, _: User = Depends(_hr), db: Session
     if "status" in data and data["status"]:
         event.status = data["status"]
     if "category" in data:
-        event.category = (data["category"] or "").strip() or None
+        if data["category"] and db.get(KnowledgeDocument, data["category"]) is None:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Документ базы знаний не найден")
+        event.category = data["category"] or None
     if "hr_comment" in data:
         event.hr_comment = (data["hr_comment"] or "").strip() or None
     db.commit()

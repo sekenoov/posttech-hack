@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import (
-    Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint,
+    Boolean, Column, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -284,11 +284,10 @@ class KnowledgeGapEvent(Base):
     reason = Column(String, nullable=False)
     question = Column(Text, nullable=False)          # masked
     language = Column(String, nullable=False, default="unknown")
-    top_score = Column(Float, nullable=True)
     candidate_doc_id = Column(String, nullable=True)
     answer_mode = Column(String, nullable=False)     # what the employee saw: refusal | extractive | llm | personal
     status = Column(String, nullable=False, default=GapStatus.NEW, index=True)
-    category = Column(String, nullable=True)
+    category = Column(String, nullable=True)         # knowledge document id chosen by HR
     hr_comment = Column(Text, nullable=True)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
