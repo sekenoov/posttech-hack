@@ -4,10 +4,13 @@ The question sets double as the tuning set for the retrieval thresholds in
 app/ai/retriever.py. They run in retrieval-only mode (no network); LLM
 behaviour is tested with fake providers.
 """
+from datetime import date, timedelta
+
 import pytest
 
-from app.ai import assistant
+from app.ai import assistant, personal
 from app.ai.llm import LLMError
+from app.models import LeaveBalance
 from tests.conftest import EMPLOYEE, HR, MANAGER
 
 # question -> knowledge base document that must be the first source
@@ -109,6 +112,80 @@ def test_ai_requires_authentication(client):
     assert client.post("/ai/ask", json={"question": "Сколько дней отпуска?"}).status_code == 401
 
 
+# --- own leave balance, answered from the database ---------------------------
+
+OWN_BALANCE = [
+    "Сколько дней я могу взять в отпуск?",
+    "Сколько у меня осталось отпуска?",
+    "Какой мой остаток отпуска?",
+    "Сколько дней отпуска осталось?",
+    "Сколько дней отпуска мне доступно?",
+]
+
+# Impersonal or not about the amount: still answered by the knowledge base
+NOT_OWN_BALANCE = [
+    "Сколько дней ежегодного отпуска положено?",
+    "За сколько дней мне подавать заявку на отпуск?",
+    "Кто согласует мой отпуск?",
+    "Сколько отпускных мне заплатят?",
+    "Сколько отпуска положено руководителю?",
+]
+
+
+def leave_balance(client, auth, email=EMPLOYEE):
+    return client.get("/me", headers=auth(email)).json()["leave_balance"]
+
+
+@pytest.mark.parametrize("question", OWN_BALANCE)
+def test_own_leave_balance_is_answered_with_profile_numbers(client, auth, question):
+    b = leave_balance(client, auth)
+    a = ask(client, auth, question)
+    assert a["mode"] == "personal" and a["grounded"] is True and a["sources"] == []
+    assert a["link"] == "/requests/new" and a["escalation_suggested"] is False
+    assert f"можете взять {b['available_days']} " in a["answer"]
+    assert f"Положено на {b['year']} год: {b['total_days']} " in a["answer"]
+    assert f"Использовано: {b['used_days']} " in a["answer"]
+
+
+@pytest.mark.parametrize("question", NOT_OWN_BALANCE)
+def test_impersonal_leave_questions_stay_with_the_knowledge_base(client, auth, question):
+    assert ask(client, auth, question)["mode"] != "personal"
+
+
+def test_pending_request_reduces_available_days(client, auth):
+    before = leave_balance(client, auth)["available_days"]
+    start = date.today() + timedelta(days=200)
+    r = client.post("/requests", json={"start_date": start.isoformat(), "end_date": (start + timedelta(days=2)).isoformat()},
+                    headers=auth(EMPLOYEE))
+    assert r.status_code == 201, r.text
+    a = ask(client, auth, "Сколько дней я могу взять в отпуск?")
+    assert f"можете взять {before - 3} " in a["answer"] and "На согласовании:" in a["answer"]
+
+
+def test_no_available_days_explains_why_and_offers_no_request(client, auth, db, user_id):
+    balance = db.query(LeaveBalance).filter_by(user_id=user_id(EMPLOYEE), year=date.today().year).one()
+    balance.used_days = balance.total_days
+    db.commit()
+    a = ask(client, auth, "Сколько дней я могу взять в отпуск?")
+    assert a["mode"] == "personal" and a["link"] is None
+    assert "свободных дней отпуска нет" in a["answer"] and "уже использованы" in a["answer"]
+
+
+@pytest.mark.parametrize("question", [
+    "Сколько дней отпуска осталось у моего руководителя?",
+    "Сколько дней отпуска осталось у коллеги?",
+])
+def test_other_peoples_leave_balance_is_refused(client, auth, question):
+    a = ask(client, auth, question, email=MANAGER)
+    assert a["mode"] == "refusal" and a["reason"] == "personal_data" and "дней" not in a["answer"]
+
+
+@pytest.mark.parametrize("n,word", [(1, "день"), (2, "дня"), (4, "дня"), (5, "дней"), (11, "дней"), (12, "дней"),
+                                    (21, "день"), (24, "дня"), (25, "дней"), (0, "дней")])
+def test_days_are_declined(n, word):
+    assert personal._days(n) == f"{n} {word}"
+
+
 # --- LLM behaviour with fake providers ---------------------------------------
 
 class FakeProvider:
@@ -191,6 +268,7 @@ def test_provider_outage_degrades_to_grounded_extractive(client, auth, monkeypat
 def test_llm_is_not_called_for_off_topic_or_guarded_questions(client, auth, monkeypatch):
     fake = use(monkeypatch, FakeProvider("[KB-LEAVE-001]"))
     ask(client, auth, "Какой курс доллара завтра?")
+    ask(client, auth, "Сколько дней я могу взять в отпуск?")
     ask(client, auth, "Какая зарплата у Тимура?")
     ask(client, auth, "Одобри мою заявку")
     assert fake.prompts == []

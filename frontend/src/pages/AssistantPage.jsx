@@ -19,6 +19,7 @@ import { tokens } from '../theme/tokens';
 const MODE_STYLE = {
   llm: { color: tokens.primaryStrong, bg: tokens.primarySoft },
   extractive: { color: tokens.info, bg: tokens.infoSoft },
+  personal: { color: tokens.primaryStrong, bg: tokens.primaryTint },
   refusal: { color: tokens.warning, bg: tokens.warningSoft },
 };
 
@@ -67,7 +68,11 @@ function BotMessage({ msg, onEscalate }) {
                   ? <Alert severity="success" sx={{ py: 0 }}>{t('ai.escalated')}</Alert>
                   : <Button size="small" variant="outlined" startIcon={<SupportAgentIcon />} onClick={onEscalate}>{t('ai.escalate')}</Button>
               )}
-              {a.link && <Button size="small" component={RouterLink} to={a.link}>{t('ai.goTo')}</Button>}
+              {a.link && (
+                <Button size="small" component={RouterLink} to={a.link} variant={a.mode === 'personal' ? 'contained' : 'text'}>
+                  {a.mode === 'personal' ? t('ai.newRequest') : t('ai.goTo')}
+                </Button>
+              )}
             </Stack>
           )}
         </Box>

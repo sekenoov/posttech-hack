@@ -52,3 +52,17 @@ test('S6 — AI Jana refuses to disclose a colleague’s data', async ({ page })
   await ask(page, 'Какая зарплата у Тимура Оспанова?');
   await expect(lastBot(page)).toContainText('не предоставляю информацию о других сотрудниках');
 });
+
+test('AI Jana answers the employee’s own leave balance and offers a request', async ({ page }) => {
+  await login(page, USERS.employee);
+  await page.getByRole('link', { name: 'AI Jana', exact: true }).click();
+  await ask(page, 'Сколько дней я могу взять в отпуск?');
+
+  const answer = lastBot(page);
+  await expect(answer).toContainText('Ваши данные');
+  await expect(answer).toContainText(/Сейчас вы можете взять \d+ календарн/);
+  await expect(answer).toContainText(/Положено на \d{4} год/);
+  await expect(answer.getByText('Источники')).toHaveCount(0);
+  await answer.getByRole('link', { name: 'Подать заявку' }).click();
+  await expect(page).toHaveURL(/\/requests\/new$/);
+});

@@ -297,7 +297,7 @@ class SourceOut(BaseModel):
 
 class AnswerOut(BaseModel):
     answer: str
-    mode: Literal["llm", "extractive", "refusal"]
+    mode: Literal["llm", "extractive", "personal", "refusal"]
     grounded: bool
     sources: list[SourceOut]
     reason: Optional[str] = None

@@ -1,10 +1,11 @@
-"""AI Jana pipeline: guard -> retrieve -> relevance check -> LLM (optional) -> answer with sources.
+"""AI Jana pipeline: guard -> own leave balance -> retrieve -> relevance check -> LLM (optional) -> answer with sources.
 
 Invariants:
   * an answer about company rules always carries at least one source;
   * below the relevance threshold the answer is a refusal, never a guess;
   * only knowledge-base text is sent to the LLM — no personal data;
-  * LLM output that cites nothing from the given context is discarded.
+  * LLM output that cites nothing from the given context is discarded;
+  * the asker's own leave balance is answered from the database, never via an LLM.
 """
 import logging
 import re
@@ -13,7 +14,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.ai import guard
+from app.ai import guard, personal
 from app.ai.knowledge import Chunk, chunk_document
 from app.ai.llm import LLMError, LLMProvider, get_provider
 from app.ai.retriever import Hit, Retriever, best_sentences, content_stems, normalize
@@ -52,7 +53,7 @@ class Source:
 @dataclass
 class Answer:
     answer: str
-    mode: str                 # llm | extractive | refusal
+    mode: str                 # llm | extractive | personal | refusal
     grounded: bool
     sources: list[Source] = field(default_factory=list)
     reason: str | None = None  # no_relevant_info | personal_data | hr_decision
@@ -129,6 +130,15 @@ def ask(db: Session, user: User, question: str) -> Answer:
     if blocked:
         return Answer(answer=blocked.message, mode="refusal", grounded=False, reason=blocked.reason,
                       escalation_suggested=blocked.reason == "personal_data", link=blocked.link)
+
+    intent = personal.classify(question)
+    if intent == "other":
+        return Answer(answer="Я не предоставляю информацию об отпусках других сотрудников. Данные о коллегах "
+                             "доступны только руководителю и HR в рамках их полномочий.",
+                      mode="refusal", grounded=False, reason="personal_data", escalation_suggested=True)
+    if intent == "own":
+        own = personal.answer(db, user)
+        return Answer(answer=own.text, mode="personal", grounded=True, link=own.link)
 
     hits = [h for h in get_retriever(db).search(question, k=3) if h.relevant]
     if not hits:
