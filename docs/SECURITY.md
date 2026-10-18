@@ -9,7 +9,7 @@
 | SEC-3 | Согласование по совпадению отдела: можно было согласовать свою заявку или заявку коллеги-руководителя | Решение принимает только непосредственный руководитель (`manager_id`) или HR как резервный согласующий; self-approval запрещён для всех ролей | `test_manager_cannot_approve_own_request`, `test_hr_cannot_approve_own_request`, `test_manager_cannot_decide_other_team_request` |
 | SEC-4 | Автосогласование pending-заявок через 5 минут | Логика удалена; переходы статусов — только в `services/leave.py` | `test_no_automatic_approval_of_old_pending_requests` |
 | SEC-5 | Debug-логгер писал email и префикс bcrypt-хеша; фронтенд слал телеметрию на `127.0.0.1:7243` | Оба удалены | — |
-| SEC-6 | Дефолтный JWT-секрет в коде | `SECRET_KEY` из env; если не задан — случайный ключ на процесс | `test_protected_endpoints_require_valid_token` (поддельный и просроченный токены) |
+| SEC-6 | Дефолтный JWT-секрет в коде | `SECRET_KEY` из env; если не задан, ключ генерируется один раз и хранится в томе данных (`data/.secret_key`, права 600), в репозиторий и образ не попадает | `test_protected_endpoints_require_valid_token` (поддельный и просроченный токены) |
 | SEC-7 | Загрузка файлов без ограничений | Модуль документов удалён (хранение документов вне scope кейса) | — |
 | SEC-9 | В git лежали `backend/data/employee_portal.db` и `backend/.cursor/debug.log` | `git rm --cached`, правила в `.gitignore` | Проверка `git ls-files` в чек-листе поставки |
 

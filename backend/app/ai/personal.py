@@ -245,6 +245,20 @@ def _balance(db: Session, user: User) -> Reply:
     return Reply(f"Сейчас свободных дней отпуска нет. {why}\n\n{breakdown}")
 
 
+def _covers_month(r: LeaveRequest, month: int, year: int | None = None) -> bool:
+    """True if any day of the leave falls in the month (and year, if given).
+
+    Walks the months from start to end, so a leave from 28 December to
+    3 January belongs to both December and January.
+    """
+    y, m = r.start_date.year, r.start_date.month
+    while (y, m) <= (r.end_date.year, r.end_date.month):
+        if m == month and (year is None or y == year):
+            return True
+        y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+    return False
+
+
 def _matches(rows: list[LeaveRequest], q: dates.DateQuery, today: date) -> list[LeaveRequest]:
     def same_day(a: date, b: date) -> bool:
         return a == b if q.year_given else (a.month, a.day) == (b.month, b.day)
@@ -258,9 +272,8 @@ def _matches(rows: list[LeaveRequest], q: dates.DateQuery, today: date) -> list[
             exact = [r for r in found if same_day(r.start_date, q.start)]
             found = exact or [r for r in found if r.start_date <= q.start <= r.end_date]
     elif q.month:
-        in_year = [r for r in found if r.start_date.month <= q.month <= r.end_date.month
-                   and r.start_date.year <= today.year <= r.end_date.year]
-        found = in_year or [r for r in found if r.start_date.month <= q.month <= r.end_date.month]
+        in_year = [r for r in found if _covers_month(r, q.month, today.year)]
+        found = in_year or [r for r in found if _covers_month(r, q.month)]
     if q.days:
         found = [r for r in found if r.days == q.days]
     return found

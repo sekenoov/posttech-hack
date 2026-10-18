@@ -6,7 +6,7 @@ notifications and the Documentolog hand-off can never be skipped.
 """
 from datetime import date, timedelta
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.integrations import get_docflow_provider, log_event
