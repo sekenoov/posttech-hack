@@ -172,7 +172,7 @@ const ru = {
     goTo: 'Перейти', newRequest: 'Подать заявку',
     modeLlm: 'Ответ сформирован по базе знаний',
     modeExtractive: 'Цитата из базы знаний',
-    modePersonal: 'Ваши данные',
+    modePersonal: 'Данные JanaМен',
     modeRefusal: 'Нет подтверждённой информации',
     providerDown: 'Языковая модель недоступна, поэтому показана цитата из документа.',
     statusLlm: ({ model }) => `LLM: ${model}`,

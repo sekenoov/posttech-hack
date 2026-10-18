@@ -9,10 +9,13 @@ import DescriptionIcon from '@mui/icons-material/DescriptionOutlined';
 import SupportAgentIcon from '@mui/icons-material/SupportAgentOutlined';
 import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
+import EventIcon from '@mui/icons-material/EventOutlined';
+import SchoolIcon from '@mui/icons-material/SchoolOutlined';
 import useApi from '../hooks/useApi';
 import api, { errorMessage } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationsContext';
-import { PageHeader } from '../components/common/ui';
+import { PageHeader, StatusChip } from '../components/common/ui';
 import { useT } from '../i18n';
 import { tokens } from '../theme/tokens';
 
@@ -22,6 +25,28 @@ const MODE_STYLE = {
   personal: { color: tokens.primaryStrong, bg: tokens.primaryTint },
   refusal: { color: tokens.warning, bg: tokens.warningSoft },
 };
+
+// Button label for the section a personal answer links to
+const LINK_LABELS = {
+  '/requests/new': 'ai.newRequest', '/requests': 'nav.requests', '/academy': 'nav.academy', '/team': 'nav.team',
+};
+
+/** A record behind a personal answer: one request or course, opens its page. */
+function ItemCard({ item }) {
+  const Icon = item.kind === 'course' ? SchoolIcon : EventIcon;
+  return (
+    <Box component={RouterLink} to={item.link}
+      sx={{ display: 'block', textDecoration: 'none', color: 'inherit', p: 1.5, borderRadius: 2,
+        border: `1px solid ${tokens.border}`, bgcolor: 'background.paper', '&:hover': { borderColor: tokens.primary } }}>
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Icon fontSize="small" sx={{ color: tokens.primary }} />
+        <Typography variant="body2" fontWeight={600} sx={{ flex: 1, minWidth: 0 }} noWrap>{item.title}</Typography>
+        <StatusChip status={item.status} />
+      </Stack>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{item.subtitle}</Typography>
+    </Box>
+  );
+}
 
 function SourceCard({ source }) {
   const t = useT();
@@ -42,8 +67,11 @@ function SourceCard({ source }) {
 
 function BotMessage({ msg, onEscalate }) {
   const t = useT();
+  const { user } = useAuth();
   const a = msg.answer;
   const style = a ? MODE_STYLE[a.mode] : null;
+  const personal = a?.mode === 'personal';
+  const linkLabel = a?.link === '/team' && user?.role === 'hr' ? 'nav.teamHr' : (personal && LINK_LABELS[a?.link]) || 'ai.goTo';
   return (
     <Stack direction="row" spacing={1.5} alignItems="flex-start" role="article" aria-label="AI Jana">
       <Avatar sx={{ bgcolor: tokens.primary, width: 32, height: 32 }}><AutoAwesomeIcon fontSize="small" /></Avatar>
@@ -55,6 +83,9 @@ function BotMessage({ msg, onEscalate }) {
           )}
           <Typography sx={{ whiteSpace: 'pre-line', lineHeight: 1.6 }}>{msg.text}</Typography>
           {a?.provider_error && <Typography variant="caption" component="p" sx={{ mt: 1 }}>{t('ai.providerDown')}</Typography>}
+          {a?.items?.length > 0 && (
+            <Stack spacing={1} sx={{ mt: 1.5 }}>{a.items.map((it) => <ItemCard key={it.link} item={it} />)}</Stack>
+          )}
           {a?.sources?.length > 0 && (
             <Box sx={{ mt: 1.5 }}>
               <Typography variant="overline" color="text.secondary">{t('ai.sources')}</Typography>
@@ -69,8 +100,8 @@ function BotMessage({ msg, onEscalate }) {
                   : <Button size="small" variant="outlined" startIcon={<SupportAgentIcon />} onClick={onEscalate}>{t('ai.escalate')}</Button>
               )}
               {a.link && (
-                <Button size="small" component={RouterLink} to={a.link} variant={a.mode === 'personal' ? 'contained' : 'text'}>
-                  {a.mode === 'personal' ? t('ai.newRequest') : t('ai.goTo')}
+                <Button size="small" component={RouterLink} to={a.link} variant={personal ? 'contained' : 'text'}>
+                  {t(linkLabel)}
                 </Button>
               )}
             </Stack>

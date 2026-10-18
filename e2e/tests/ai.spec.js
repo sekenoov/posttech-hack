@@ -59,10 +59,33 @@ test('AI Jana answers the employee’s own leave balance and offers a request', 
   await ask(page, 'Сколько дней я могу взять в отпуск?');
 
   const answer = lastBot(page);
-  await expect(answer).toContainText('Ваши данные');
+  await expect(answer).toContainText('Данные JanaМен');
   await expect(answer).toContainText(/Сейчас вы можете взять \d+ календарн/);
   await expect(answer).toContainText(/Положено на \d{4} год/);
   await expect(answer.getByText('Источники')).toHaveCount(0);
   await answer.getByRole('link', { name: 'Подать заявку' }).click();
   await expect(page).toHaveURL(/\/requests\/new$/);
+});
+
+test('AI Jana shows a manager the requests waiting for a decision as cards', async ({ page }) => {
+  await login(page, USERS.manager);
+  await page.getByRole('link', { name: 'AI Jana', exact: true }).click();
+  await ask(page, 'Какие заявки ждут моего решения?');
+
+  const answer = lastBot(page);
+  await expect(answer).toContainText('Данные JanaМен');
+  await expect(answer).toContainText(/Вашего решения ждут \d+ заявк/);
+  const card = answer.getByRole('link', { name: /На рассмотрении/ }).first();
+  await expect(card).toBeVisible();
+  await card.click();
+  await expect(page).toHaveURL(/\/requests\/\d+$/);
+});
+
+test('AI Jana lists the employee’s own requests with their statuses', async ({ page }) => {
+  await login(page, USERS.employee);
+  await page.getByRole('link', { name: 'AI Jana', exact: true }).click();
+  await ask(page, 'Что с моими заявками?');
+  const answer = lastBot(page);
+  await expect(answer).toContainText(/У вас \d+ заяв/);
+  await expect(answer.getByRole('link', { name: 'Мои заявки' })).toBeVisible();
 });

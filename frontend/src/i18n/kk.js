@@ -167,7 +167,7 @@ const kk = {
     goTo: 'Өту', newRequest: 'Өтінім беру',
     modeLlm: 'Жауап білім қоры бойынша құрылды',
     modeExtractive: 'Білім қорынан үзінді',
-    modePersonal: 'Сіздің деректеріңіз',
+    modePersonal: 'JanaМен деректері',
     modeRefusal: 'Расталған ақпарат жоқ',
     providerDown: 'Тілдік модель қолжетімсіз, сондықтан құжаттан үзінді көрсетілді.',
     statusLlm: ({ model }) => `LLM: ${model}`,

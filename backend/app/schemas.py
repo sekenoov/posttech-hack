@@ -295,6 +295,14 @@ class SourceOut(BaseModel):
     snippet: str
 
 
+class AnswerItemOut(BaseModel):
+    kind: Literal["request", "course"]
+    title: str
+    subtitle: str
+    status: str
+    link: str
+
+
 class AnswerOut(BaseModel):
     answer: str
     mode: Literal["llm", "extractive", "personal", "refusal"]
@@ -305,6 +313,7 @@ class AnswerOut(BaseModel):
     link: Optional[str] = None
     provider: Optional[str] = None
     provider_error: bool = False
+    items: list[AnswerItemOut] = []
 
 
 class AIStatusOut(BaseModel):
