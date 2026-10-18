@@ -48,6 +48,7 @@ const EmployeesPage = lazyPage(() => import('./pages/admin/EmployeesPage'));
 const AcademyAdminPage = lazyPage(() => import('./pages/admin/AcademyAdminPage'));
 const KnowledgeAdminPage = lazyPage(() => import('./pages/admin/KnowledgeAdminPage'));
 const IntegrationsPage = lazyPage(() => import('./pages/admin/IntegrationsPage'));
+const KnowledgeGapsPage = lazyPage(() => import('./pages/admin/KnowledgeGapsPage'));
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -65,7 +66,7 @@ function RequireRole({ roles, children }) {
 
 const TITLES = [
   ['/requests/new', 'requests.newTitle'], ['/requests', 'nav.requests'], ['/profile', 'nav.profile'],
-  ['/team', 'nav.team'], ['/academy', 'nav.academy'], ['/admin/academy', 'nav.adminAcademy'], ['/assistant', 'nav.assistant'], ['/knowledge', 'nav.knowledge'], ['/admin/knowledge', 'kb.adminTitle'], ['/admin/integrations', 'nav.integrations'], ['/notifications', 'nav.notifications'], ['/admin/employees', 'nav.employees'],
+  ['/team', 'nav.team'], ['/academy', 'nav.academy'], ['/admin/academy', 'nav.adminAcademy'], ['/assistant', 'nav.assistant'], ['/knowledge', 'nav.knowledge'], ['/admin/knowledge-gaps', 'nav.gaps'], ['/admin/knowledge', 'kb.adminTitle'], ['/admin/integrations', 'nav.integrations'], ['/notifications', 'nav.notifications'], ['/admin/employees', 'nav.employees'],
   ['/login', 'auth.title'],
 ];
 
@@ -108,6 +109,7 @@ export default function App() {
                   <Route path="admin/academy" element={<RequireRole roles={['hr']}><AcademyAdminPage /></RequireRole>} />
                   <Route path="admin/knowledge" element={<RequireRole roles={['hr']}><KnowledgeAdminPage /></RequireRole>} />
                   <Route path="admin/integrations" element={<RequireRole roles={['hr']}><IntegrationsPage /></RequireRole>} />
+                  <Route path="admin/knowledge-gaps" element={<RequireRole roles={['hr']}><KnowledgeGapsPage /></RequireRole>} />
                   <Route path="*" element={<NotFoundState />} />
                 </Route>
               </Routes>

@@ -247,3 +247,47 @@ class KnowledgeDocument(Base):
     updated_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     updated_by = relationship("User")
+
+
+class GapEventType:
+    NO_MATCH = "no_match"
+    NEGATIVE_FEEDBACK = "negative_feedback"
+    ALL = (NO_MATCH, NEGATIVE_FEEDBACK)
+
+
+class GapReason:
+    RETRIEVAL_BELOW_THRESHOLD = "retrieval_below_threshold"  # no section passed the relevance check
+    LLM_NO_ANSWER = "llm_no_answer"                          # sections found, the LLM answered NO_ANSWER
+    USER_MARKED_UNHELPFUL = "user_marked_unhelpful"          # employee pressed «Не помогло»
+
+
+class GapStatus:
+    NEW = "new"
+    REVIEWING = "reviewing"
+    RESOLVED = "resolved"
+    IGNORED = "ignored"
+    ALL = (NEW, REVIEWING, RESOLVED, IGNORED)
+
+
+class KnowledgeGapEvent(Base):
+    """A question AI Jana could not answer well: input for growing the knowledge base.
+
+    Deliberately anonymous: no user id is stored and the question is masked
+    before it is written. Security refusals (guard) are never logged here.
+    """
+
+    __tablename__ = "knowledge_gap_events"
+
+    id = Column(Integer, primary_key=True)
+    created_at = Column(DateTime, default=utcnow, index=True)
+    event_type = Column(String, nullable=False, index=True)
+    reason = Column(String, nullable=False)
+    question = Column(Text, nullable=False)          # masked
+    language = Column(String, nullable=False, default="unknown")
+    candidate_doc_id = Column(String, nullable=True)
+    answer_mode = Column(String, nullable=False)     # what the employee saw: refusal | extractive | llm | personal
+    status = Column(String, nullable=False, default=GapStatus.NEW, index=True)
+    category = Column(String, nullable=True)         # knowledge document id chosen by HR
+    hr_comment = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+

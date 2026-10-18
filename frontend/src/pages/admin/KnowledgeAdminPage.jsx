@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Alert, Box, Button, Card, CardContent, Grid, List, ListItemButton, ListItemText, Snackbar, Stack, Tab, Tabs, TextField, Typography,
 } from '@mui/material';
 import useApi from '../../hooks/useApi';
 import api, { errorMessage } from '../../services/api';
-import { AsyncContent, PageHeader } from '../../components/common/ui';
+import { AsyncContent, InfoAlert, PageHeader } from '../../components/common/ui';
 import Markdown from '../../components/common/Markdown';
 import { useT } from '../../i18n';
 import { tokens } from '../../theme/tokens';
 import { fmtDateTime } from '../../utils/format';
 
-function Editor({ id, onSaved }) {
+// A question from the knowledge gap journal becomes a draft section. It lives
+// only in the form until HR writes the answer and presses «Сохранить».
+const draftSection = (question, answer) => `\n\n## ${question.replace(/[\r\n#]+/g, ' ').trim()}\n\n${answer}`;
+
+function Editor({ id, onSaved, draft }) {
   const t = useT();
   const doc = useApi(`/kb/${id}`);
   const [form, setForm] = useState(null);
@@ -18,7 +23,11 @@ function Editor({ id, onSaved }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { if (doc.data) setForm({ title: doc.data.title, body_md: doc.data.body_md }); }, [doc.data]);
+  useEffect(() => {
+    if (doc.data) {
+      setForm({ title: doc.data.title, body_md: doc.data.body_md + (draft ? draftSection(draft, t('gaps.draftAnswer')) : '') });
+    }
+  }, [doc.data, draft, t]);
 
   const save = async () => {
     setBusy(true);
@@ -43,6 +52,7 @@ function Editor({ id, onSaved }) {
               <Typography variant="caption">{d.id} v{d.version}, {fmtDateTime(d.updated_at)}</Typography>
             </Stack>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            {draft && <InfoAlert sx={{ mb: 2 }}>{t('gaps.draftNotice')}</InfoAlert>}
             <TextField fullWidth label={t('kb.docTitle')} value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} sx={{ mb: 2 }} />
             <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 1 }}>
               <Tab value="edit" label={t('kb.edit')} /><Tab value="preview" label={t('kb.preview')} />
@@ -66,7 +76,9 @@ function Editor({ id, onSaved }) {
 export default function KnowledgeAdminPage() {
   const t = useT();
   const docs = useApi('/kb');
-  const [selected, setSelected] = useState(null);
+  const [params, setParams] = useSearchParams();
+  const [draft, setDraft] = useState(params.get('draft'));
+  const [selected, setSelected] = useState(params.get('doc'));
   const [flash, setFlash] = useState('');
   const current = selected || docs.data?.[0]?.id;
 
@@ -88,7 +100,10 @@ export default function KnowledgeAdminPage() {
               </Card>
             </Grid>
             <Grid item xs={12} md={8}>
-              {current && <Editor key={current} id={current} onSaved={(d) => { setFlash(t('kb.saved', { v: d.version })); docs.reload(); }} />}
+              {current && (
+                <Editor key={current} id={current} draft={draft}
+                  onSaved={(d) => { setDraft(null); setParams({}, { replace: true }); setFlash(t('kb.saved', { v: d.version })); docs.reload(); }} />
+              )}
             </Grid>
           </Grid>
         )}

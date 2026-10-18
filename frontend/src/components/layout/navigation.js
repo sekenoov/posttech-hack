@@ -10,6 +10,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import MenuBookIcon from '@mui/icons-material/MenuBookOutlined';
 import EditNoteIcon from '@mui/icons-material/EditNoteOutlined';
 import HubIcon from '@mui/icons-material/HubOutlined';
+import TroubleshootIcon from '@mui/icons-material/TroubleshootOutlined';
 
 // Sidebar entries per role. Only screens that actually work are listed;
 // new modules add themselves here when implemented.
@@ -34,6 +35,7 @@ export const NAV_SECTIONS = [
       { to: '/admin/employees', label: 'nav.employees', icon: BadgeIcon, roles: ['hr'] },
       { to: '/admin/academy', label: 'nav.adminAcademy', icon: AssignmentIcon, roles: ['hr'] },
       { to: '/admin/knowledge', label: 'nav.kbEditor', icon: EditNoteIcon, roles: ['hr'] },
+      { to: '/admin/knowledge-gaps', label: 'nav.gaps', icon: TroubleshootIcon, roles: ['hr'] },
       { to: '/admin/integrations', label: 'nav.integrations', icon: HubIcon, roles: ['hr'] },
     ],
   },
